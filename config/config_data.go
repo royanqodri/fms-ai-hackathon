@@ -3,25 +3,24 @@ package config
 import "time"
 
 type Config struct {
-	Service           ServiceConfig
-	DatabaseConfig    DBConfig
-	DBMasterConfig    DBConfig
-	DBOperationConfig DBConfig
-	JWT               JwtConfig
-	Encrypt           EncryptConfig
-	FTP               FTPConfig
-	Redis             RedisConfig
-	WebhooksConfig    WebhooksConfig
-	WebSocket         WebSocketConfig
-	WebSocketServer   string
-	API               APIConfig
-	FileLocalPath     string
-	VersionApp        string
-	ServiceMode       string
-	Swagger           SwaggerConfig
-	Google            GoogleConfig
-	Facebook          FacebookConfig
-	Apple             AppleConfig
+	Service         ServiceConfig
+	DatabaseConfig  DBConfig
+	DBMainConfig    DBConfig
+	JWT             JwtConfig
+	Encrypt         EncryptConfig
+	FTP             FTPConfig
+	Redis           RedisConfig
+	WebhooksConfig  WebhooksConfig
+	WebSocket       WebSocketConfig
+	WebSocketServer string
+	API             APIConfig
+	FileLocalPath   string
+	VersionApp      string
+	ServiceMode     string
+	Swagger         SwaggerConfig
+	Google          GoogleConfig
+	Facebook        FacebookConfig
+	Apple           AppleConfig
 }
 
 type ServiceConfig struct {

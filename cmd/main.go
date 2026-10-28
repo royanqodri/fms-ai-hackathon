@@ -13,7 +13,6 @@ import (
 	"github.com/royanqodri/fms-ai-hackathon/config"
 	"github.com/royanqodri/fms-ai-hackathon/database"
 	"github.com/royanqodri/fms-ai-hackathon/util"
-	"github.com/royanqodri/fms-ai-hackathon/util/logging"
 )
 
 var (
@@ -36,8 +35,8 @@ func main() {
 	initDatabase()
 
 	// init log
-	logging.InitLog()
-	defer logging.CloseLog()
+	// logging.InitLog()
+	// defer logging.CloseLog()
 
 	// init repository
 	initRepository()
@@ -61,7 +60,6 @@ func initConfig() {
 
 func initDatabase() {
 	database.ConnectDatabaseMaster()
-	database.ConnectDatabaseOperation()
 }
 
 func initRepository() {

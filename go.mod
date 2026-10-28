@@ -2,7 +2,10 @@ module github.com/royanqodri/fms-ai-hackathon
 
 go 1.26.0
 
-require gorm.io/gorm v1.31.2
+require (
+	golang.org/x/crypto v0.58.0
+	gorm.io/gorm v1.31.2
+)
 
 require (
 	cloud.google.com/go/auth v0.24.1-0.20261001053825-dbc26066f70a // indirect
@@ -58,7 +61,6 @@ require (
 	go.uber.org/atomic v1.12.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	golang.org/x/arch v0.22.0 // indirect
-	golang.org/x/crypto v0.58.0 // indirect
 	golang.org/x/net v0.61.0 // indirect
 	golang.org/x/oauth2 v0.37.0 // indirect
 	golang.org/x/sync v0.24.0 // indirect
