@@ -63,34 +63,34 @@ func Init() error {
 
 	// DB Master Config
 	config.DBMasterConfig = DBConfig{
-		Driver:          v.GetString("DB_MASTER_DRIVER"),
-		Host:            v.GetString("DB_MASTER_HOST"),
-		Port:            v.GetString("DB_MASTER_PORT"),
-		DatabaseName:    v.GetString("DB_MASTER_DATABASE_NAME"),
-		User:            v.GetString("DB_MASTER_USER"),
-		Password:        v.GetString("DB_MASTER_PASSWORD"),
-		SslMode:         v.GetString("DB_MASTER_SSL_MODE"),
-		Timezone:        v.GetString("DB_MASTER_TIMEZONE"),
-		MaxIdleConn:     v.GetInt("DB_MASTER_MAX_IDLE_CONN"),
-		MaxOpenConn:     v.GetInt("DB_MASTER_MAX_OPEN_CONN"),
-		MaxConnLifetime: time.Duration(v.GetInt("DB_MASTER_MAX_CONN_LIFE_TIME")) * time.Second,
-		MaxConnIdletime: time.Duration(v.GetInt("DB_MASTER_MAX_CONN_IDLE_TIME")) * time.Second,
+		Driver:          v.GetString("MASTER_DB_DRIVER"),
+		Host:            v.GetString("MASTER_DB_HOST"),
+		Port:            v.GetString("MASTER_DB_PORT"),
+		DatabaseName:    v.GetString("MASTER_DB_NAME"),
+		User:            v.GetString("MASTER_DB_USER"),
+		Password:        v.GetString("MASTER_DB_PASSWORD"),
+		SslMode:         v.GetString("MASTER_DB_SSL_MODE"),
+		Timezone:        v.GetString("MASTER_DB_TIMEZONE"),
+		MaxIdleConn:     v.GetInt("MASTER_DB_MAX_IDLE_CONN"),
+		MaxOpenConn:     v.GetInt("MASTER_DB_MAX_OPEN_CONN"),
+		MaxConnLifetime: time.Duration(v.GetInt("MASTER_DB_MAX_CONN_LIFE_TIME")) * time.Second,
+		MaxConnIdletime: time.Duration(v.GetInt("MASTER_DB_MAX_CONN_IDLE_TIME")) * time.Second,
 	}
 
 	// DB Operation Config
 	config.DBOperationConfig = DBConfig{
-		Driver:          v.GetString("DB_OPERATION_DRIVER"),
-		Host:            v.GetString("DB_OPERATION_HOST"),
-		Port:            v.GetString("DB_OPERATION_PORT"),
-		DatabaseName:    v.GetString("DB_OPERATION_DATABASE_NAME"),
-		User:            v.GetString("DB_OPERATION_USER"),
-		Password:        v.GetString("DB_OPERATION_PASSWORD"),
-		SslMode:         v.GetString("DB_OPERATION_SSL_MODE"),
-		Timezone:        v.GetString("DB_OPERATION_TIMEZONE"),
-		MaxIdleConn:     v.GetInt("DB_OPERATION_MAX_IDLE_CONN"),
-		MaxOpenConn:     v.GetInt("DB_OPERATION_MAX_OPEN_CONN"),
-		MaxConnLifetime: time.Duration(v.GetInt("DB_OPERATION_MAX_CONN_LIFE_TIME")) * time.Second,
-		MaxConnIdletime: time.Duration(v.GetInt("DB_OPERATION_MAX_CONN_IDLE_TIME")) * time.Second,
+		Driver:          v.GetString("OPERATION_DB_DRIVER"),
+		Host:            v.GetString("OPERATION_DB_HOST"),
+		Port:            v.GetString("OPERATION_DB_PORT"),
+		DatabaseName:    v.GetString("OPERATION_DB_NAME"),
+		User:            v.GetString("OPERATION_DB_USER"),
+		Password:        v.GetString("OPERATION_DB_PASSWORD"),
+		SslMode:         v.GetString("OPERATION_DB_SSL_MODE"),
+		Timezone:        v.GetString("OPERATION_DB_TIMEZONE"),
+		MaxIdleConn:     v.GetInt("OPERATION_DB_MAX_IDLE_CONN"),
+		MaxOpenConn:     v.GetInt("OPERATION_DB_MAX_OPEN_CONN"),
+		MaxConnLifetime: time.Duration(v.GetInt("OPERATION_DB_MAX_CONN_LIFE_TIME")) * time.Second,
+		MaxConnIdletime: time.Duration(v.GetInt("OPERATION_DB_MAX_CONN_IDLE_TIME")) * time.Second,
 	}
 
 	// // JWT Config
