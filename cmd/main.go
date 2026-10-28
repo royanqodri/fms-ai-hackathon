@@ -13,15 +13,37 @@ import (
 	"github.com/royanqodri/fms-ai-hackathon/config"
 	"github.com/royanqodri/fms-ai-hackathon/database"
 	"github.com/royanqodri/fms-ai-hackathon/util"
+
+	"github.com/royanqodri/fms-ai-hackathon/controller"
+
+	repoMst "github.com/royanqodri/fms-ai-hackathon/repository/master"
+	repoOp "github.com/royanqodri/fms-ai-hackathon/repository/operation"
+
+	serviceMst "github.com/royanqodri/fms-ai-hackathon/service/master"
+	serviceOp "github.com/royanqodri/fms-ai-hackathon/service/operation"
 )
 
 var (
-// repository
+	// REPOSITORY
+	mstCustomerRepo  repoMst.MstCustomerRepository
+	mstUserRepo      repoMst.MstUserRepository
+	mstTruckRepo     repoMst.MstTruckRepository
+	trxTelemetryRepo repoOp.TrxTelemetryRepository
+	logAlertRepo     repoOp.LogAlertRepository
 
-// service
+	// SERVICE
+	mstCustomerService  serviceMst.MstCustomerService
+	mstUserService      serviceMst.MstUserService
+	mstTruckService     serviceMst.MstTruckService
+	trxTelemetryService serviceOp.TrxTelemetryService
+	logAlertService     serviceOp.LogAlertService
 
-// controller
-
+	// CONTROLLER
+	mstCustomerController  controller.MstCustomerController
+	mstUserController      controller.MstUserController
+	mstTruckController     controller.MstTruckController
+	trxTelemetryController controller.TrxTelemetryController
+	logAlertController     controller.LogAlertController
 )
 
 func main() {
@@ -33,10 +55,6 @@ func main() {
 
 	// init database
 	initDatabase()
-
-	// init log
-	// logging.InitLog()
-	// defer logging.CloseLog()
 
 	// init repository
 	initRepository()
@@ -63,15 +81,29 @@ func initDatabase() {
 }
 
 func initRepository() {
-	// truckRepo = repository.NewTruckRepository()
+
+	mstCustomerRepo = repoMst.NewMstCustomerRepository()
+	mstUserRepo = repoMst.NewMstUserRepository()
+	mstTruckRepo = repoMst.NewMstTruckRepository()
+	trxTelemetryRepo = repoOp.NewTrxTelemetryRepository()
+	logAlertRepo = repoOp.NewLogAlertRepository()
 }
 
 func initService() {
-	// truckService = service.NewTruckService(truckRepo)
+	mstCustomerService = serviceMst.NewMstCustomerService(mstCustomerRepo)
+	mstUserService = serviceMst.NewMstUserService(mstUserRepo)
+	mstTruckService = serviceMst.NewMstTruckService(mstTruckRepo)
+	trxTelemetryService = serviceOp.NewTrxTelemetryService(trxTelemetryRepo)
+	logAlertService = serviceOp.NewLogAlertService(logAlertRepo)
 }
 
 func initController() {
-	// truckController = controller.NewTruckController(truckService)
+
+	mstCustomerController = controller.NewMstCustomerController(mstCustomerService)
+	mstUserController = controller.NewMstUserController(mstUserService)
+	mstTruckController = controller.NewMstTruckController(mstTruckService)
+	trxTelemetryController = controller.NewTrxTelemetryController(trxTelemetryService)
+	logAlertController = controller.NewLogAlertController(logAlertService)
 }
 
 func initRouter() {
@@ -89,13 +121,30 @@ func initRouter() {
 	// init router
 	router := gin.New()
 	router.SetTrustedProxies([]string{"0.0.0.0/0"})
-
-	// public route - require no authentication
 	router.Use(gin.Recovery(), util.CORSMiddleware())
-	// Endpoint
-	// router.GET("/api/trucks", truckController.GetAll)
 
-	// Endpoint untuk Health Check / Test
+	//ENDPOINT
+	api := router.Group("/api")
+	{
+		// Master
+		api.GET("/customers", mstCustomerController.GetByParams)
+		api.POST("/customers", mstCustomerController.Post)
+
+		api.GET("/users", mstUserController.GetByParams)
+		api.POST("/users", mstUserController.Post)
+
+		api.GET("/trucks", mstTruckController.GetByParams)
+		api.POST("/trucks", mstTruckController.Post)
+
+		// Operation
+		api.GET("/telemetries", trxTelemetryController.GetByParams)
+		api.POST("/telemetries", trxTelemetryController.Post)
+
+		api.GET("/alerts", logAlertController.GetByParams)
+		api.POST("/alerts", logAlertController.Post)
+	}
+
+	// Endpoint for Health Check / Test
 	router.GET("/test", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "FMS AI Backend Server OK 🚀"})
 	})
