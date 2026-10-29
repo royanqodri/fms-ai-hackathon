@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FMS AI - Live Map</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <style>
+        body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        #map { height: 100vh; width: 100%; }
+        
+        .info-panel {
+            position: absolute; top: 10px; right: 10px; background: white;
+            padding: 15px; border-radius: 8px; z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2); max-width: 300px;
+        }
+        .info-panel h3 { margin: 0 0 5px 0; font-size: 18px; color: #333; }
+        .info-panel p { margin: 0; font-size: 13px; color: #666; }
+        
+        .popup-content { max-width: 280px; }
+        .popup-content h4 { margin: 0 0 10px 0; color: #0056b3; font-size: 16px; }
+        .truck-info { font-size: 13px; margin-bottom: 10px; line-height: 1.5; color: #333; }
+        .ai-chat-box { display: flex; flex-direction: column; gap: 5px; margin-top: 10px; border-top: 1px solid #eee; padding-top: 10px; }
+        .ai-chat-box input { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; }
+        .ai-chat-box button { padding: 8px; background: #0056b3; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .ai-chat-box button:hover { background: #004494; }
+        .ai-response { font-size: 12px; background: #f8f9fa; border-left: 3px solid #0056b3; padding: 8px; border-radius: 4px; margin-top: 5px; display: none; color: #333; }
+    </style>
+</head>
+<body>
+
+    <div class="info-panel">
+        <h3>🚛 FMS Lumajang</h3>
+        <p id="status">Loading data...</p>
+    </div>
+
+    <div id="map"></div>
+
+    <script>
+        // Inisialisasi Map
+        const map = L.map('map').setView([-8.133, 113.223], 11);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Ikon Truk
+        const truckIcon = L.divIcon({
+            html: '<div style="font-size: 30px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">🚛</div>',
+            className: 'custom-truck-icon',
+            iconSize: [30, 30],
+            iconAnchor: [15, 30],
+            popupAnchor: [0, -30]
+        });
+
+        // Mapping Data Statis (Plat & Muatan)
+        const truckData = {
+            "be25a416-f538-4068-9c99-2f548ef0a97e": { plate: "N 5678 AB", cargo: "SAND" },
+            "dd254e1b-e068-4dd5-939b-b6fc0b142e9a": { plate: "N 9999 CD", cargo: "SUGARCANE" },
+            "b540e8dd-2a1e-4a7e-8e02-371742cc9818": { plate: "N 1234 XY", cargo: "TIMBER" }
+        };
+
+        // GET API
+        async function loadTruckData() {
+            try {
+                const response = await fetch('http://localhost:9005/api/telemetries?source=WEB');
+                const result = await response.json();
+
+                let trucks = [];
+                if (result.data && Array.isArray(result.data)) {
+                    trucks = result.data;
+                } else if (Array.isArray(result)) {
+                    trucks = result;
+                }
+
+                if (trucks.length > 0) {
+  
+                    const latestTrucks = {};
+                    trucks.forEach(truck => {
+                        const existing = latestTrucks[truck.truck_id];
+                        if (!existing || new Date(truck.recorded_at) > new Date(existing.recorded_at)) {
+                            latestTrucks[truck.truck_id] = truck;
+                        }
+                    });
+
+                    const uniqueTrucks = Object.values(latestTrucks);
+                    document.getElementById('status').innerText = `Showing ${uniqueTrucks.length} active trucks`;
+                    
+                    // Hapus marker lama
+                    map.eachLayer((layer) => {
+                        if (layer instanceof L.Marker) map.removeLayer(layer);
+                    });
+
+                    uniqueTrucks.forEach(truck => {
+                        if (!truck.latitude || !truck.longitude) return;
+
+                        const info = truckData[truck.truck_id] || { plate: "Unknown", cargo: "N/A" };
+                        const popupId = `popup-${truck.id}`;
+
+                        const popupContent = `
+                            <div class="popup-content">
+                                <h4>Truck ${info.plate}</h4>
+                                <div class="truck-info">
+                                    <b>Temperature:</b> <span style="color:${truck.temperature > 80 ? 'red' : 'green'}; font-weight: bold;">${truck.temperature}°C</span><br>
+                                    <b>Weight Load:</b> ${truck.weight_load} Tons<br>
+                                    <b>Cargo:</b> ${info.cargo}<br>
+                                </div>
+                                <div class="ai-chat-box">
+                                    <input type="text" id="input-${popupId}" placeholder="Ask AI about this truck...">
+                                    <!-- Kirim latitude dan longitude ke fungsi askAI -->
+                                    <button onclick="askAI('${truck.truck_id}', '${popupId}', '${info.plate}', ${truck.latitude}, ${truck.longitude})">Ask AI</button>
+                                    <div id="response-${popupId}" class="ai-response"></div>
+                                </div>
+                            </div>
+                        `;
+
+                        const marker = L.marker([truck.latitude, truck.longitude], { icon: truckIcon }).addTo(map);
+                        marker.bindPopup(popupContent);
+                    });
+                } else {
+                    document.getElementById('status').innerText = "No truck data found.";
+                }
+            } catch (error) {
+                console.error("Error fetching data:", error);
+                document.getElementById('status').innerText = "Failed to connect to backend.";
+            }
+        }
+
+        // ASK ke AI
+        async function askAI(truckId, popupId, plateNumber, lat, lng) {
+            const inputElement = document.getElementById(`input-${popupId}`);
+            const responseElement = document.getElementById(`response-${popupId}`);
+            const question = inputElement.value;
+
+            if (!question) return;
+
+            responseElement.style.display = 'block';
+            responseElement.innerText = "Thinking...";
+
+            try {
+                const res = await fetch('http://localhost:9005/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        telegram_id: "123456789", 
+                        message: `Regarding truck ${plateNumber} (ID: ${truckId}). Current location is Latitude: ${lat}, Longitude: ${lng}. User asks: ${question}. Please provide actionable advice, including if they should go to the nearest gas station or rest area.`
+                    })
+                });
+                
+                const data = await res.json();
+                
+                if(data.data && data.data.reply) {
+                    responseElement.innerText = data.data.reply;
+                } else {
+                    responseElement.innerText = "AI Error: " + (data.message || "Unknown error");
+                }
+            } catch (error) {
+                responseElement.innerText = "Failed to connect to AI server.";
+            }
+        }
+
+        loadTruckData();
+    </script>
+</body>
+</html>

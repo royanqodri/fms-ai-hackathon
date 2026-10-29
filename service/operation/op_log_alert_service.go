@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 
 	dbConn "github.com/royanqodri/fms-ai-hackathon/database"
 	entityOp "github.com/royanqodri/fms-ai-hackathon/model/entity/operation"
@@ -47,8 +48,12 @@ func (service LogAlertServiceImpl) Post(ctx *gin.Context, request requestOp.LogA
 
 	dataReq := make([]entityOp.LogAlert, len(request.Data))
 	for i, data := range request.Data {
+		newID := util.ParseUUID(data.Id)
+		if newID == uuid.Nil {
+			newID = uuid.New()
+		}
 		dataReq[i] = entityOp.LogAlert{
-			Id:         util.ParseUUID(data.Id),
+			Id:         newID,
 			TruckId:    util.MustParseUUID(data.TruckId),
 			AlertType:  data.AlertType,
 			AiAnalysis: data.AiAnalysis,

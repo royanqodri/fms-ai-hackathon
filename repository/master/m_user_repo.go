@@ -88,7 +88,7 @@ func (repo MstUserRepositoryImpl) GetByTelegramId(ctx *gin.Context, tx *gorm.DB,
 }
 
 func (repo *MstUserRepositoryImpl) Save(ctx *gin.Context, tx *gorm.DB, req []entityMst.MstUser) error {
-	result := repo.getTx(tx).Save(&req)
+	result := repo.getTx(tx).Create(&req)
 	if result.Error != nil {
 		return result.Error
 	}

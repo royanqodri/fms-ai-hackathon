@@ -49,7 +49,7 @@ func (repo TrxTelemetryRepositoryImpl) GetByParams(ctx *gin.Context, tx *gorm.DB
 }
 
 func (repo *TrxTelemetryRepositoryImpl) Save(ctx *gin.Context, tx *gorm.DB, req []entityOp.TrxTelemetry) error {
-	result := repo.getTx(tx).Save(&req)
+	result := repo.getTx(tx).Create(&req)
 	if result.Error != nil {
 		return result.Error
 	}

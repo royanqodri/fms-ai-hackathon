@@ -2,8 +2,11 @@ package operation
 
 import (
 	"fmt"
+	"log"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 
 	dbConn "github.com/royanqodri/fms-ai-hackathon/database"
 	entityOp "github.com/royanqodri/fms-ai-hackathon/model/entity/operation"
@@ -20,11 +23,15 @@ type TrxTelemetryService interface {
 
 type TrxTelemetryServiceImpl struct {
 	trxTelemetryRepo repoOp.TrxTelemetryRepository
+	logAlertRepo     repoOp.LogAlertRepository
 }
 
-func NewTrxTelemetryService(trxTelemetryRepo repoOp.TrxTelemetryRepository) TrxTelemetryService {
+func NewTrxTelemetryService(
+	trxTelemetryRepo repoOp.TrxTelemetryRepository,
+	logAlertRepo repoOp.LogAlertRepository) TrxTelemetryService {
 	return &TrxTelemetryServiceImpl{
 		trxTelemetryRepo: trxTelemetryRepo,
+		logAlertRepo:     logAlertRepo,
 	}
 }
 
@@ -46,14 +53,20 @@ func (service TrxTelemetryServiceImpl) Post(ctx *gin.Context, request requestOp.
 
 	dataReq := make([]entityOp.TrxTelemetry, len(request.Data))
 	for i, data := range request.Data {
+		newID := util.ParseUUID(data.Id)
+		if newID == uuid.Nil {
+			newID = uuid.New()
+		}
+
 		dataReq[i] = entityOp.TrxTelemetry{
-			Id:          util.ParseUUID(data.Id),
+			Id:          newID,
 			TruckId:     util.MustParseUUID(data.TruckId),
 			Latitude:    data.Latitude,
 			Longitude:   data.Longitude,
 			Temperature: data.Temperature,
 			WeightLoad:  data.WeightLoad,
 			Vibration:   data.Vibration,
+			RecordedAt:  time.Now(),
 		}
 	}
 
@@ -67,6 +80,49 @@ func (service TrxTelemetryServiceImpl) Post(ctx *gin.Context, request requestOp.
 		return err
 	}
 
-	// TODO: GET Meta AI
+	for _, data := range dataReq {
+		if data.Temperature > 38.0 {
+			go service.analyzeAndAlert(data)
+		}
+	}
+
 	return nil
+}
+
+func (service TrxTelemetryServiceImpl) analyzeAndAlert(data entityOp.TrxTelemetry) {
+	systemPrompt, userPrompt := util.GenerateTelemetryPrompt(
+		data.TruckId.String(), data.Temperature, data.WeightLoad, data.Vibration,
+	)
+
+	// GET AI
+	aiReply, err := util.AskMetaAI(systemPrompt, userPrompt)
+	if err != nil {
+		log.Printf("❌ AI Error: %v", err)
+		return
+	}
+
+	alertType := "WARNING"
+	if data.Temperature > 45.0 {
+		alertType = "CRITICAL_OVERHEAT"
+	}
+
+	alertData := []entityOp.LogAlert{
+		{
+			Id:         uuid.New(),
+			TruckId:    data.TruckId,
+			AlertType:  alertType,
+			AiAnalysis: aiReply,
+			IsResolved: false,
+		},
+	}
+
+	txAlert := dbConn.DBConn.Begin()
+	if err := service.logAlertRepo.Save(nil, txAlert, alertData); err != nil {
+		txAlert.Rollback()
+		log.Printf("❌ Failed to save alert: %v", err)
+		return
+	}
+	txAlert.Commit()
+
+	log.Printf("✅ AI Alert Generated for Truck %s: %s", data.TruckId.String(), alertType)
 }
