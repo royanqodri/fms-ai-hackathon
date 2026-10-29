@@ -31,10 +31,16 @@ func (controller *ChatControllerImpl) Chat(ctx *gin.Context) {
 		return
 	}
 
-	// Get Service AI
 	aiReply, err := controller.chatService.AskAI(ctx, req.TelegramId, req.Message)
 	if err != nil {
-		util.WriteResponse(ctx, util.JSON, http.StatusInternalServerError, []any{}, []any{}, fmt.Sprintf("%v", err), 0, 0)
+		util.WriteResponse(ctx, util.JSON, http.StatusInternalServerError, []any{}, []any{}, fmt.Sprintf("AI Error: %v", err), 0, 0)
+		return
+	}
+
+	err = util.SendTelegramMessage(req.TelegramId, aiReply)
+	if err != nil {
+
+		util.WriteResponse(ctx, util.JSON, http.StatusInternalServerError, []any{}, []any{}, fmt.Sprintf("Telegram Error: %v", err), 0, 0)
 		return
 	}
 
