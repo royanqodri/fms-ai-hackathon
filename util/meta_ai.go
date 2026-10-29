@@ -9,7 +9,7 @@ import (
 	"os"
 )
 
-// Struct untuk request ke Meta API
+// Struct for Meta API
 type MetaChatRequest struct {
 	Model    string        `json:"model"`
 	Messages []MetaMessage `json:"messages"`
@@ -20,7 +20,6 @@ type MetaMessage struct {
 	Content string `json:"content"`
 }
 
-// Struct untuk response dari Meta API
 type MetaChatResponse struct {
 	Choices []struct {
 		Message struct {
@@ -37,7 +36,7 @@ func AskMetaAI(systemPrompt string, userPrompt string) (string, error) {
 	}
 
 	reqBody := MetaChatRequest{
-		Model: "muse-spark-1.3", // Gunakan model terbaru Meta
+		Model: "muse-spark-1.3",
 		Messages: []MetaMessage{
 			{Role: "system", Content: systemPrompt},
 			{Role: "user", Content: userPrompt},

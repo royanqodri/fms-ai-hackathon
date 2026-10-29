@@ -30,6 +30,7 @@ var (
 	mstTruckRepo     repoMst.MstTruckRepository
 	trxTelemetryRepo repoOp.TrxTelemetryRepository
 	logAlertRepo     repoOp.LogAlertRepository
+	aiRepo           repoOp.AiRepository
 
 	// SERVICE
 	mstCustomerService  serviceMst.MstCustomerService
@@ -37,6 +38,7 @@ var (
 	mstTruckService     serviceMst.MstTruckService
 	trxTelemetryService serviceOp.TrxTelemetryService
 	logAlertService     serviceOp.LogAlertService
+	chatService         serviceOp.ChatService
 
 	// CONTROLLER
 	mstCustomerController  controller.MstCustomerController
@@ -44,6 +46,7 @@ var (
 	mstTruckController     controller.MstTruckController
 	trxTelemetryController controller.TrxTelemetryController
 	logAlertController     controller.LogAlertController
+	chatController         controller.ChatController
 )
 
 func main() {
@@ -81,12 +84,12 @@ func initDatabase() {
 }
 
 func initRepository() {
-
 	mstCustomerRepo = repoMst.NewMstCustomerRepository()
 	mstUserRepo = repoMst.NewMstUserRepository()
 	mstTruckRepo = repoMst.NewMstTruckRepository()
 	trxTelemetryRepo = repoOp.NewTrxTelemetryRepository()
 	logAlertRepo = repoOp.NewLogAlertRepository()
+	aiRepo = repoOp.NewAiRepository()
 }
 
 func initService() {
@@ -95,15 +98,16 @@ func initService() {
 	mstTruckService = serviceMst.NewMstTruckService(mstTruckRepo)
 	trxTelemetryService = serviceOp.NewTrxTelemetryService(trxTelemetryRepo)
 	logAlertService = serviceOp.NewLogAlertService(logAlertRepo)
+	chatService = serviceOp.NewChatService(aiRepo)
 }
 
 func initController() {
-
 	mstCustomerController = controller.NewMstCustomerController(mstCustomerService)
 	mstUserController = controller.NewMstUserController(mstUserService)
 	mstTruckController = controller.NewMstTruckController(mstTruckService)
 	trxTelemetryController = controller.NewTrxTelemetryController(trxTelemetryService)
 	logAlertController = controller.NewLogAlertController(logAlertService)
+	chatController = controller.NewChatController(chatService)
 }
 
 func initRouter() {
@@ -142,6 +146,8 @@ func initRouter() {
 
 		api.GET("/alerts", logAlertController.GetByParams)
 		api.POST("/alerts", logAlertController.Post)
+
+		api.POST("/chat", chatController.Chat)
 	}
 
 	// Endpoint for Health Check / Test
