@@ -70,7 +70,8 @@ func (repo MstCustomerRepositoryImpl) GetByParams(ctx *gin.Context, tx *gorm.DB,
 }
 
 func (repo *MstCustomerRepositoryImpl) Save(ctx *gin.Context, tx *gorm.DB, req []entityMst.MstCustomer) error {
-	result := repo.getTx(tx).Save(&req)
+	result := repo.getTx(tx).Create(&req)
+
 	if result.Error != nil {
 		return result.Error
 	}

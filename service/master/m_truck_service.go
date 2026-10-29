@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 
 	dbConn "github.com/royanqodri/fms-ai-hackathon/database"
 	entityMst "github.com/royanqodri/fms-ai-hackathon/model/entity/master"
@@ -46,8 +47,13 @@ func (service MstTruckServiceImpl) Post(ctx *gin.Context, request requestMst.Mst
 
 	dataReq := make([]entityMst.MstTruck, len(request.Data))
 	for i, data := range request.Data {
+		newID := util.ParseUUID(data.Id)
+		if newID == uuid.Nil {
+			newID = uuid.New()
+		}
+
 		dataReq[i] = entityMst.MstTruck{
-			Id:          util.ParseUUID(data.Id),
+			Id:          newID,
 			CustomerId:  util.MustParseUUID(data.CustomerId),
 			PlateNumber: data.PlateNumber,
 			CargoType:   data.CargoType,

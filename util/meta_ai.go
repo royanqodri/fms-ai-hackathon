@@ -5,11 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
+
+	"github.com/joho/godotenv"
 )
 
-// Struct for Meta API
 type MetaChatRequest struct {
 	Model    string        `json:"model"`
 	Messages []MetaMessage `json:"messages"`
@@ -28,11 +30,19 @@ type MetaChatResponse struct {
 	} `json:"choices"`
 }
 
-// AskMetaAI for GET Meta MAPI
+// AskMetaAI for GET Meta API
 func AskMetaAI(systemPrompt string, userPrompt string) (string, error) {
+	err := godotenv.Load("config.env")
+	if err != nil {
+		err = godotenv.Load("./cmd/config.env")
+		if err != nil {
+			log.Println("Warning: config.env not found, trying OS env")
+		}
+	}
+
 	apiKey := os.Getenv("META_API_KEY")
 	if apiKey == "" {
-		return "", fmt.Errorf("META_API_KEY is not set in .env")
+		return "", fmt.Errorf("META_API_KEY is not set. file config.env on root folder META_API_KEY=...")
 	}
 
 	reqBody := MetaChatRequest{
@@ -72,4 +82,12 @@ func AskMetaAI(systemPrompt string, userPrompt string) (string, error) {
 	}
 
 	return "", fmt.Errorf("no response from AI")
+}
+
+func GenerateTelemetryPrompt(truckID string, temperature, weightLoad, vibration float64) (string, string) {
+	systemPrompt := "You are an AI Fleet Monitoring System for Lumajang. Analyze the telemetry data and provide a brief, actionable warning if there is a risk."
+	userPrompt := fmt.Sprintf("Truck ID: %s. Engine Temperature: %.2f°C. Weight Load: %.2f Tons. Vibration: %.2f.",
+		truckID, temperature, weightLoad, vibration)
+
+	return systemPrompt, userPrompt
 }

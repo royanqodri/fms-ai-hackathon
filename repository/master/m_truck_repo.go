@@ -76,7 +76,7 @@ func (repo MstTruckRepositoryImpl) GetByParams(ctx *gin.Context, tx *gorm.DB, re
 }
 
 func (repo *MstTruckRepositoryImpl) Save(ctx *gin.Context, tx *gorm.DB, req []entityMst.MstTruck) error {
-	result := repo.getTx(tx).Save(&req)
+	result := repo.getTx(tx).Create(&req)
 	if result.Error != nil {
 		return result.Error
 	}

@@ -21,6 +21,7 @@ type Config struct {
 	Google          GoogleConfig
 	Facebook        FacebookConfig
 	Apple           AppleConfig
+	Meta            MetaConfig
 }
 
 type ServiceConfig struct {
@@ -115,4 +116,9 @@ type FacebookConfig struct {
 
 type AppleConfig struct {
 	ClientId string // bundle ID (iOS) atau Services ID (web/android)
+}
+
+type MetaConfig struct {
+	ClientId string
+	ApiKey   string
 }

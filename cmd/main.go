@@ -96,7 +96,7 @@ func initService() {
 	mstCustomerService = serviceMst.NewMstCustomerService(mstCustomerRepo)
 	mstUserService = serviceMst.NewMstUserService(mstUserRepo)
 	mstTruckService = serviceMst.NewMstTruckService(mstTruckRepo)
-	trxTelemetryService = serviceOp.NewTrxTelemetryService(trxTelemetryRepo)
+	trxTelemetryService = serviceOp.NewTrxTelemetryService(trxTelemetryRepo, logAlertRepo)
 	logAlertService = serviceOp.NewLogAlertService(logAlertRepo)
 	chatService = serviceOp.NewChatService(aiRepo)
 }
@@ -127,6 +127,8 @@ func initRouter() {
 	router.SetTrustedProxies([]string{"0.0.0.0/0"})
 	router.Use(gin.Recovery(), util.CORSMiddleware())
 
+	router.Static("/public", "./public")
+
 	//ENDPOINT
 	api := router.Group("/api")
 	{
@@ -148,6 +150,7 @@ func initRouter() {
 		api.POST("/alerts", logAlertController.Post)
 
 		api.POST("/chat", chatController.Chat)
+
 	}
 
 	// Endpoint for Health Check / Test

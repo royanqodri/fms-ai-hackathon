@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/spf13/viper"
@@ -105,6 +106,10 @@ func Init() error {
 		AppSecret: v.GetString("FACEBOOK_APP_SECRET"),
 	}
 	config.Apple = AppleConfig{ClientId: v.GetString("APPLE_CLIENT_ID")}
+
+	config.Meta = MetaConfig{
+		ApiKey: os.Getenv("META_API_KEY"),
+	}
 
 	return nil
 }
