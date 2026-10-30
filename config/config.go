@@ -111,6 +111,8 @@ func Init() error {
 		ApiKey: os.Getenv("META_API_KEY"),
 	}
 
+	config.TelegramToken = os.Getenv("TELEGRAM_BOT_TOKEN")
+
 	return nil
 }
 

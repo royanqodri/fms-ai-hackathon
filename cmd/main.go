@@ -150,6 +150,7 @@ func initRouter() {
 		api.POST("/alerts", logAlertController.Post)
 
 		api.POST("/chat", chatController.Chat)
+		api.POST("/telegram/webhook", chatController.TelegramWebhook)
 
 	}
 
