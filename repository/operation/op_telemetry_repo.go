@@ -30,7 +30,7 @@ func (repo TrxTelemetryRepositoryImpl) getTx(tx *gorm.DB) *gorm.DB {
 
 func (repo TrxTelemetryRepositoryImpl) GetByParams(ctx *gin.Context, tx *gorm.DB, request requestOp.TrxTelemetryGetRequest) (respData []responseOp.TrxTelemetryGetResponse, err error) {
 	result := repo.getTx(tx).
-		Select("id, truck_id, latitude, longitude, temperature, weight_load, vibration, CAST(recorded_at AS VARCHAR) AS recorded_at").
+		Select("id, truck_id, latitude, longitude, temperature, weight_load, vibration, fuel_level, oil_pressure, engine_rpm, CAST(recorded_at AS VARCHAR) AS recorded_at").
 		Table("operations.trx_telemetries")
 
 	if request.TruckId != "" {

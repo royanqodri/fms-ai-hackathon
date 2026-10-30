@@ -84,10 +84,17 @@ func AskMetaAI(systemPrompt string, userPrompt string) (string, error) {
 	return "", fmt.Errorf("no response from AI")
 }
 
-func GenerateTelemetryPrompt(truckID string, temperature, weightLoad, vibration float64) (string, string) {
-	systemPrompt := "You are an AI Fleet Monitoring System for Lumajang. Analyze the telemetry data and provide a brief, actionable warning if there is a risk."
-	userPrompt := fmt.Sprintf("Truck ID: %s. Engine Temperature: %.2f°C. Weight Load: %.2f Tons. Vibration: %.2f.",
-		truckID, temperature, weightLoad, vibration)
+func GenerateTelemetryPrompt(truckID string, latitude, longitude, temperature, weightLoad, vibration, fuelLevel, oilPressure, engineRpm float64) (string, string) {
+	systemPrompt := `You are an AI Fleet Monitoring System for Lumajang. 
+Analyze the telemetry data and provide a brief, actionable warning if there is a risk. 
+If the engine is overheating, suggest the driver to pull over safely and find the nearest gas station (SPBU) or rest area based on their current coordinates.`
+
+	userPrompt := fmt.Sprintf(
+		"Truck ID: %s. Current Location: Latitude %.6f, Longitude %.6f. "+
+			"Engine Temperature: %.2f°C. Weight Load: %.2f Tons. Vibration: %.2f. "+
+			"Fuel Level: %.2f%%. Oil Pressure: %.2f PSI. Engine RPM: %.2f.",
+		truckID, latitude, longitude, temperature, weightLoad, vibration, fuelLevel, oilPressure, engineRpm,
+	)
 
 	return systemPrompt, userPrompt
 }

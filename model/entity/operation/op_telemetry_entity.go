@@ -14,6 +14,9 @@ type TrxTelemetry struct {
 	Temperature float64
 	WeightLoad  float64
 	Vibration   float64
+	FuelLevel   float64
+	OilPressure float64
+	EngineRpm   float64
 	RecordedAt  time.Time
 }
 

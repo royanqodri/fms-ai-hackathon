@@ -39,6 +39,9 @@ func (repo AiRepositoryImpl) GetTruckContext(ctx *gin.Context, tx *gorm.DB, plat
 			tel.weight_load, 
 			tel.latitude, 
 			tel.longitude, 
+			tel.fuel_level,   
+			tel.oil_pressure, 
+			tel.engine_rpm,   
 			CAST(tel.recorded_at AS VARCHAR) AS last_update
 		FROM master.mst_trucks t
 		LEFT JOIN master.mst_customers c ON t.customer_id = c.id
@@ -49,10 +52,10 @@ func (repo AiRepositoryImpl) GetTruckContext(ctx *gin.Context, tx *gorm.DB, plat
 	`
 
 	row := repo.getTx(tx).Raw(query, "%"+plateNumber+"%").Row()
-
 	err := row.Scan(
 		new(string), new(string), new(string), new(string),
-		new(float64), new(float64), new(float64), new(float64), new(string),
+		new(float64), new(float64), new(float64), new(float64),
+		new(float64), new(float64), new(float64), new(string),
 	)
 
 	type TruckContext struct {
@@ -64,6 +67,9 @@ func (repo AiRepositoryImpl) GetTruckContext(ctx *gin.Context, tx *gorm.DB, plat
 		WeightLoad  float64 `json:"weight_load"`
 		Latitude    float64 `json:"latitude"`
 		Longitude   float64 `json:"longitude"`
+		FuelLevel   float64 `json:"fuel_level"`
+		OilPressure float64 `json:"oil_pressure"`
+		EngineRpm   float64 `json:"engine_rpm"`
 		LastUpdate  string  `json:"last_update"`
 	}
 
@@ -85,6 +91,9 @@ func (repo AiRepositoryImpl) GetTruckContext(ctx *gin.Context, tx *gorm.DB, plat
 		"temperature":  data.Temperature,
 		"weight_load":  data.WeightLoad,
 		"location":     map[string]float64{"lat": data.Latitude, "lng": data.Longitude},
+		"fuel_level":   data.FuelLevel,
+		"oil_pressure": data.OilPressure,
+		"engine_rpm":   data.EngineRpm,
 		"last_update":  data.LastUpdate,
 	}
 

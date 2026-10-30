@@ -8,6 +8,9 @@ type TrxTelemetryGetResponse struct {
 	Temperature float64 `json:"temperature"`
 	WeightLoad  float64 `json:"weight_load"`
 	Vibration   float64 `json:"vibration"`
+	FuelLevel   float64 `json:"fuel_level"`
+	OilPressure float64 `json:"oil_pressure"`
+	EngineRpm   float64 `json:"engine_rpm"`
 	RecordedAt  string  `json:"recorded_at"`
 }
 

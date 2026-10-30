@@ -66,6 +66,9 @@ func (service TrxTelemetryServiceImpl) Post(ctx *gin.Context, request requestOp.
 			Temperature: data.Temperature,
 			WeightLoad:  data.WeightLoad,
 			Vibration:   data.Vibration,
+			FuelLevel:   data.FuelLevel,
+			OilPressure: data.OilPressure,
+			EngineRpm:   data.EngineRpm,
 			RecordedAt:  time.Now(),
 		}
 	}
@@ -91,7 +94,15 @@ func (service TrxTelemetryServiceImpl) Post(ctx *gin.Context, request requestOp.
 
 func (service TrxTelemetryServiceImpl) analyzeAndAlert(data entityOp.TrxTelemetry) {
 	systemPrompt, userPrompt := util.GenerateTelemetryPrompt(
-		data.TruckId.String(), data.Temperature, data.WeightLoad, data.Vibration,
+		data.TruckId.String(),
+		data.Latitude,
+		data.Longitude,
+		data.Temperature,
+		data.WeightLoad,
+		data.Vibration,
+		data.FuelLevel,
+		data.OilPressure,
+		data.EngineRpm,
 	)
 
 	// GET AI
