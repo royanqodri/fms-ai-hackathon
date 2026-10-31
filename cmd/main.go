@@ -107,7 +107,7 @@ func initController() {
 	mstTruckController = controller.NewMstTruckController(mstTruckService)
 	trxTelemetryController = controller.NewTrxTelemetryController(trxTelemetryService)
 	logAlertController = controller.NewLogAlertController(logAlertService)
-	chatController = controller.NewChatController(chatService)
+	chatController = controller.NewChatController(chatService, aiRepo)
 }
 
 func initRouter() {

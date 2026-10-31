@@ -12,6 +12,7 @@ import (
 
 type ChatService interface {
 	AskAI(ctx *gin.Context, telegramId string, userPrompt string) (string, error)
+	GenerateTemperatureChart(ctx *gin.Context, chatID string, plateNumber string) error
 }
 
 type ChatServiceImpl struct {
@@ -24,7 +25,6 @@ func NewChatService(aiRepo operation.AiRepository) ChatService {
 
 func (service *ChatServiceImpl) AskAI(ctx *gin.Context, telegramId string, userPrompt string) (string, error) {
 
-	// 1. Ekstrak plat nomor dari pertanyaan user
 	plateNumber := ""
 	words := strings.Fields(userPrompt)
 	for i := 0; i < len(words)-1; i++ {
@@ -34,16 +34,13 @@ func (service *ChatServiceImpl) AskAI(ctx *gin.Context, telegramId string, userP
 		}
 	}
 
-	// 2. Ambil konteks data truk
 	var truckContext map[string]interface{}
 	if plateNumber != "" {
 		truckContext, _ = service.aiRepo.GetTruckContext(ctx, nil, plateNumber)
 	}
 
-	// 3. Ambil peringatan terbaru
 	recentAlerts, _ := service.aiRepo.GetRecentAlerts(ctx, nil, 5)
 
-	// 4. Ubah konteks menjadi JSON
 	contextData, _ := json.Marshal(map[string]interface{}{
 		"requested_truck_data": truckContext,
 		"recent_fleet_alerts":  recentAlerts,
@@ -77,11 +74,41 @@ func (service *ChatServiceImpl) AskAI(ctx *gin.Context, telegramId string, userP
 		6. Keep your answer brief and actionable.
 	`, string(contextData), spbuList)
 
-	// 7. Panggil Meta AI
+	// Call AI
 	aiResponse, err := util.AskMetaAI(systemPrompt, userPrompt)
 	if err != nil {
 		return "", err
 	}
 
 	return aiResponse, nil
+}
+
+func (service *ChatServiceImpl) GenerateTemperatureChart(ctx *gin.Context, chatID string, plateNumber string) error {
+	history, err := service.aiRepo.GetTemperatureHistory(ctx, nil, plateNumber, 1)
+	if err != nil {
+		return fmt.Errorf("failed to get history: %w", err)
+	}
+
+	if len(history) == 0 {
+		return fmt.Errorf("no telemetry data found for truck %s", plateNumber)
+	}
+
+	var labels []string
+	var tempData, fuelData, oilData, rpmData []float64
+
+	for _, h := range history {
+		timeStr := h["recorded_at"].(string)
+		if len(timeStr) >= 16 {
+			labels = append(labels, timeStr[11:16])
+		} else {
+			labels = append(labels, timeStr)
+		}
+		tempData = append(tempData, h["temperature"].(float64))
+		fuelData = append(fuelData, h["fuel_level"].(float64))
+		oilData = append(oilData, h["oil_pressure"].(float64))
+		rpmData = append(rpmData, h["engine_rpm"].(float64)/100)
+	}
+
+	title := fmt.Sprintf("Latest Health Metrics - Truck %s", plateNumber)
+	return util.SendChartToTelegram(chatID, title, labels, tempData, fuelData, oilData, rpmData)
 }
