@@ -20,14 +20,86 @@
         .info-panel h3 { margin: 0 0 5px 0; font-size: 18px; color: #333; }
         .info-panel p { margin: 0; font-size: 13px; color: #666; }
         
-        .popup-content { max-width: 280px; }
-        .popup-content h4 { margin: 0 0 10px 0; color: #0056b3; font-size: 16px; }
-        .truck-info { font-size: 13px; margin-bottom: 10px; line-height: 1.5; color: #333; }
-        .ai-chat-box { display: flex; flex-direction: column; gap: 5px; margin-top: 10px; border-top: 1px solid #eee; padding-top: 10px; }
-        .ai-chat-box input { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; }
-        .ai-chat-box button { padding: 8px; background: #0056b3; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        .ai-chat-box button:hover { background: #004494; }
-        .ai-response { font-size: 12px; background: #f8f9fa; border-left: 3px solid #0056b3; padding: 8px; border-radius: 4px; margin-top: 5px; display: none; color: #333; }
+        .popup-content { width: 260px; }
+        .popup-content h4 { margin: 0 0 10px 0; color: #0056b3; font-size: 16px; border-bottom: 2px solid #eee; padding-bottom: 5px; }
+        
+        .truck-info-grid { 
+            display: grid; grid-template-columns: 1fr 1fr; gap: 8px; 
+            font-size: 12px; color: #333; margin-bottom: 5px; 
+        }
+        .info-item {
+            background: #f8f9fa; padding: 6px; border-radius: 4px; border-left: 3px solid #0056b3;
+        }
+        .info-item b { color: #555; display: block; font-size: 11px; margin-bottom: 2px; }
+        .info-item span { font-weight: bold; font-size: 13px; }
+
+        /* === WIDGET AI BOT === */
+        .ai-widget {
+            position: absolute; bottom: 20px; left: 20px;
+            width: 340px; background: white; border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3); z-index: 1000;
+            display: none; /* SEMBUNYI SAAT AWAL */
+            flex-direction: column; overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        .ai-widget.active { display: flex; }
+        
+        .ai-widget-header {
+            background: linear-gradient(135deg, #0056b3, #003d82); 
+            color: white; padding: 12px 15px;
+            display: flex; justify-content: space-between; align-items: center;
+            cursor: pointer;
+        }
+        .ai-bot-profile { display: flex; align-items: center; gap: 10px; }
+        .ai-bot-avatar { font-size: 24px; background: white; border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; }
+        .ai-bot-name { font-weight: bold; font-size: 14px; }
+        .ai-bot-status { font-size: 11px; opacity: 0.8; }
+        
+        .ai-widget-body {
+            padding: 15px; display: flex; flex-direction: column; gap: 10px;
+            max-height: 350px; overflow-y: auto; background: #f4f7f6;
+        }
+        
+        .chat-bubble { max-width: 85%; padding: 10px 12px; border-radius: 8px; font-size: 12.5px; line-height: 1.5; white-space: pre-wrap; }
+        .chat-bubble.bot { background: white; color: #333; border: 1px solid #ddd; align-self: flex-start; border-bottom-left-radius: 2px; }
+        .chat-bubble.user { background: #0056b3; color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
+
+        .ai-widget-input {
+            display: flex; gap: 5px; padding: 10px; background: white; border-top: 1px solid #eee;
+        }
+        .ai-widget-input input {
+            flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 20px; font-size: 13px; outline: none;
+        }
+        .ai-widget-input input:focus { border-color: #0056b3; }
+        .ai-widget-input button {
+            padding: 10px 15px; background: #0056b3; color: white;
+            border: none; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 13px;
+        }
+        .ai-widget-input button:hover { background: #004494; }
+
+        .ai-widget.minimized .ai-widget-body,
+        .ai-widget.minimized .ai-widget-input {
+            display: none;
+        }
+
+        /* Popup confirm Rute */
+        .route-confirm-popup {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: white; border-radius: 10px;
+            box-shadow: 0 6px 30px rgba(0,0,0,0.4);
+            z-index: 2000; width: 380px; overflow: hidden;
+            display: none;
+        }
+        .route-confirm-header { background: #ff9800; color: white; padding: 12px 15px; font-weight: bold; font-size: 14px; }
+        .route-confirm-body { padding: 15px; font-size: 13px; color: #333; }
+        .route-confirm-body p { margin: 0 0 10px 0; line-height: 1.5; }
+        .route-confirm-actions { display: flex; gap: 10px; padding: 0 15px 15px 15px; }
+        .route-confirm-actions button { flex: 1; padding: 10px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 13px; transition: 0.2s; }
+        .btn-confirm-route { background: #28a745; color: white; }
+        .btn-confirm-route:hover { background: #218838; }
+        .btn-cancel-route { background: #dc3545; color: white; }
+        .btn-cancel-route:hover { background: #c82333; }
     </style>
 </head>
 <body>
@@ -39,30 +111,118 @@
 
     <div id="map"></div>
 
+    <!-- WIDGET AI BOT -->
+    <div class="ai-widget" id="aiWidget">
+        <div class="ai-widget-header">
+            <div class="ai-bot-profile">
+                <div class="ai-bot-avatar">🤖</div>
+                <div>
+                    <div class="ai-bot-name">FMS AI Assistant</div>
+                    <div class="ai-bot-status" id="ai-context">General Fleet Context</div>
+                </div>
+            </div>
+            <div onclick="toggleWidget(event)" style="font-size: 18px; font-weight: bold; cursor: pointer; padding: 5px;">_</div>
+        </div>
+        
+        <div class="ai-widget-body" id="chatBody">
+            <div class="chat-bubble bot">Hello! I am your Fleet AI Assistant. Select a truck on the map first, then ask me anything about that specific truck.</div>
+        </div>
+
+        <div class="ai-widget-input">
+            <input type="text" id="ai-input-main" placeholder="Select a truck first..." disabled onkeypress="handleKeyPress(event)">
+            <button onclick="askAIGlobal()">Send</button>
+        </div>
+    </div>
+
+    <!-- Popup Konfirm Rute -->
+    <div id="routeConfirmPopup" class="route-confirm-popup">
+        <div class="route-confirm-header">⚠️ Route Assignment Confirmation</div>
+        <div class="route-confirm-body">
+            <p id="routeConfirmText">You are about to assign a new route to this vehicle. Please confirm.</p>
+            <p id="routeDistanceInfo" style="font-size: 12px; color: #666;"></p>
+        </div>
+        <div class="route-confirm-actions">
+            <button class="btn-confirm-route" onclick="confirmRoute()">✅ Confirm Route</button>
+            <button class="btn-cancel-route" onclick="cancelRoute()">❌ Cancel</button>
+        </div>
+    </div>
+
     <script>
-        // Inisialisasi Map
         const map = L.map('map').setView([-8.133, 113.223], 11);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
 
-        // Ikon Truk
         const truckIcon = L.divIcon({
             html: '<div style="font-size: 30px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">🚛</div>',
-            className: 'custom-truck-icon',
-            iconSize: [30, 30],
-            iconAnchor: [15, 30],
-            popupAnchor: [0, -30]
+            className: 'custom-truck-icon', iconSize: [30, 30], iconAnchor: [15, 30], popupAnchor: [0, -30]
         });
 
-        // Mapping Data Statis (Plat & Muatan)
+        const destIcon = L.divIcon({
+            html: '<div style="font-size: 28px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">📍</div>',
+            className: 'custom-dest-icon', iconSize: [28, 28], iconAnchor: [14, 28]
+        });
+
+        let currentRouteLine = null;
+        let currentDestMarker = null;
+        let pendingRoute = null;    
+        let activeTruck = null;     
+        let isBotTyping = false;
+
         const truckData = {
             "be25a416-f538-4068-9c99-2f548ef0a97e": { plate: "N 5678 AB", cargo: "SAND" },
             "dd254e1b-e068-4dd5-939b-b6fc0b142e9a": { plate: "N 9999 CD", cargo: "SUGARCANE" },
             "b540e8dd-2a1e-4a7e-8e02-371742cc9818": { plate: "N 1234 XY", cargo: "TIMBER" }
         };
 
-        // GET API
+        function haversineKm(lat1, lon1, lat2, lon2) {
+            const R = 6371;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2)**2;
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        }
+
+        function extractDestination(text) {
+            const m = text.match(/\[ROUTE:\s*(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)\s*:\s*([^\]]+)\]/i);
+            if (!m) return null;
+            return { lat: parseFloat(m[1]), lng: parseFloat(m[2]), name: m[3].trim() };
+        }
+
+        function cleanDisplayText(text) {
+            return text.replace(/\[ROUTE:[^\]]+\]/gi, '').trim();
+        }
+
+        function toggleWidget(event) {
+            if(event) event.stopPropagation();
+            const widget = document.getElementById('aiWidget');
+            widget.classList.toggle('minimized');
+            const icon = widget.querySelector('.ai-widget-header div:last-child');
+            if (widget.classList.contains('minimized')) {
+                icon.innerText = '▲';
+            } else {
+                icon.innerText = '_';
+                const chatBody = document.getElementById('chatBody');
+                chatBody.scrollTop = chatBody.scrollHeight;
+            }
+        }
+
+        function appendChat(text, sender) {
+            const chatBody = document.getElementById('chatBody');
+            const bubble = document.createElement('div');
+            bubble.className = `chat-bubble ${sender}`;
+            bubble.innerText = text;
+            chatBody.appendChild(bubble);
+            chatBody.scrollTop = chatBody.scrollHeight;
+            return bubble;
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === "Enter") {
+                askAIGlobal();
+            }
+        }
+
         async function loadTruckData() {
             try {
                 const response = await fetch('http://localhost:9005/api/telemetries?source=WEB');
@@ -76,7 +236,6 @@
                 }
 
                 if (trucks.length > 0) {
-  
                     const latestTrucks = {};
                     trucks.forEach(truck => {
                         const existing = latestTrucks[truck.truck_id];
@@ -88,31 +247,37 @@
                     const uniqueTrucks = Object.values(latestTrucks);
                     document.getElementById('status').innerText = `Showing ${uniqueTrucks.length} active trucks`;
                     
-                    // Hapus marker lama
                     map.eachLayer((layer) => {
-                        if (layer instanceof L.Marker) map.removeLayer(layer);
+                        if (layer instanceof L.Marker && layer !== currentDestMarker) {
+                            map.removeLayer(layer);
+                        }
                     });
 
                     uniqueTrucks.forEach(truck => {
                         if (!truck.latitude || !truck.longitude) return;
 
                         const info = truckData[truck.truck_id] || { plate: "Unknown", cargo: "N/A" };
-                        const popupId = `popup-${truck.id}`;
+                        
+                        const fuel = truck.fuel_level != null ? truck.fuel_level + '%' : 'N/A';
+                        const oil = truck.oil_pressure != null ? truck.oil_pressure + ' PSI' : 'N/A';
+                        const rpm = truck.engine_rpm != null ? truck.engine_rpm : 'N/A';
+                        const tempColor = truck.temperature > 80 ? 'red' : 'green';
 
                         const popupContent = `
                             <div class="popup-content">
                                 <h4>Truck ${info.plate}</h4>
-                                <div class="truck-info">
-                                    <b>Temperature:</b> <span style="color:${truck.temperature > 80 ? 'red' : 'green'}; font-weight: bold;">${truck.temperature}°C</span><br>
-                                    <b>Weight Load:</b> ${truck.weight_load} Tons<br>
-                                    <b>Cargo:</b> ${info.cargo}<br>
+                                <div class="truck-info-grid">
+                                    <div class="info-item"><b>🌡️ Temperature</b><span style="color:${tempColor};">${truck.temperature}°C</span></div>
+                                    <div class="info-item"><b>⚖️ Weight Load</b><span>${truck.weight_load} T</span></div>
+                                    <div class="info-item"><b>⛽ Fuel Level</b><span>${fuel}</span></div>
+                                    <div class="info-item"><b>🛢️ Oil Pressure</b><span>${oil}</span></div>
+                                    <div class="info-item"><b>⚙️ Engine RPM</b><span>${rpm}</span></div>
+                                    <div class="info-item"><b>📦 Cargo</b><span>${info.cargo}</span></div>
                                 </div>
-                                <div class="ai-chat-box">
-                                    <input type="text" id="input-${popupId}" placeholder="Ask AI about this truck...">
-                                    <!-- Kirim latitude dan longitude ke fungsi askAI -->
-                                    <button onclick="askAI('${truck.truck_id}', '${popupId}', '${info.plate}', ${truck.latitude}, ${truck.longitude})">Ask AI</button>
-                                    <div id="response-${popupId}" class="ai-response"></div>
-                                </div>
+                                <button onclick="selectTruckForAI('${truck.truck_id}', '${info.plate}', ${truck.latitude}, ${truck.longitude})" 
+                                    style="width:100%; padding:10px; background:#0056b3; color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold; margin-top:5px;">
+                                    💬 Ask AI about this truck
+                                </button>
                             </div>
                         `;
 
@@ -128,37 +293,140 @@
             }
         }
 
-        // ASK ke AI
-        async function askAI(truckId, popupId, plateNumber, lat, lng) {
-            const inputElement = document.getElementById(`input-${popupId}`);
-            const responseElement = document.getElementById(`response-${popupId}`);
+        function selectTruckForAI(truckId, plate, lat, lng) {
+            activeTruck = { id: truckId, plate: plate, lat: lat, lng: lng };
+            
+            const widget = document.getElementById('aiWidget');
+            
+
+            if (!widget.classList.contains('active')) {
+                widget.classList.add('active');
+            }
+
+            if (widget.classList.contains('minimized')) {
+                toggleWidget();
+            }
+
+            document.getElementById('ai-context').innerText = `Context: Truck ${plate}`;
+            const input = document.getElementById('ai-input-main');
+            input.disabled = false;
+            input.placeholder = `Ask about ${plate}...`;
+            input.focus();
+            
+            map.closePopup();
+
+            if (!widget.dataset.lastTruck || widget.dataset.lastTruck !== truckId) {
+                appendChat(`Truck ${plate} selected. What would you like to know about this vehicle?`, 'bot');
+                widget.dataset.lastTruck = truckId;
+            }
+        }
+
+        async function askAIGlobal() {
+            const inputElement = document.getElementById('ai-input-main');
             const question = inputElement.value;
 
-            if (!question) return;
+            if (!question || !activeTruck || isBotTyping) return;
 
-            responseElement.style.display = 'block';
-            responseElement.innerText = "Thinking...";
+            appendChat(question, 'user');
+            inputElement.value = ''; 
+            
+            isBotTyping = true;
+            const loadingBubble = appendChat("Thinking...", 'bot');
+
+            const routeInstruction =
+                "If the user asks for a route, direction, or how to get to a location, " +
+                "include a tag at the very end of your reply exactly like this: " +
+                "[ROUTE:latitude,longitude:PlaceName] using approximate real coordinates in East Java, Indonesia. " +
+                "Do not include the tag if the user is not asking for a route.";
+
+            const languageInstruction = "Respond in the same language the user is using.";
+
+            const fullMessage = `Regarding truck ${activeTruck.plate} (ID: ${activeTruck.id}). Current location is Latitude: ${activeTruck.lat}, Longitude: ${activeTruck.lng}. User asks: ${question}. Please provide actionable advice. ${routeInstruction} ${languageInstruction}`;
 
             try {
+         
                 const res = await fetch('http://localhost:9005/api/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        telegram_id: "123456789", 
-                        message: `Regarding truck ${plateNumber} (ID: ${truckId}). Current location is Latitude: ${lat}, Longitude: ${lng}. User asks: ${question}. Please provide actionable advice, including if they should go to the nearest gas station or rest area.`
+                        telegram_id: "1689561756", 
+                        message: fullMessage
                     })
                 });
                 
+                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                
                 const data = await res.json();
                 
-                if(data.data && data.data.reply) {
-                    responseElement.innerText = data.data.reply;
+                loadingBubble.remove();
+
+                const rawReply = (data.data && data.data.reply) ? data.data.reply : null;
+
+                if (rawReply) {
+                    const dest = extractDestination(rawReply);
+                    const displayText = cleanDisplayText(rawReply) || rawReply;
+                    
+                    appendChat(displayText, 'bot');
+
+                    if (dest) {
+                        prepareRoute(activeTruck, dest);
+                    }
                 } else {
-                    responseElement.innerText = "AI Error: " + (data.message || "Unknown error");
+                    appendChat("AI Error: " + (data.message || "Unknown error"), 'bot');
                 }
             } catch (error) {
-                responseElement.innerText = "Failed to connect to AI server.";
+                loadingBubble.remove();
+                appendChat(`Failed to connect to AI server.\nMake sure the backend is running.\nDetail: ${error.message}`, 'bot');
+                console.error("Fetch error:", error);
+            } finally {
+                isBotTyping = false;
             }
+        }
+
+        function prepareRoute(truck, dest) {
+            clearRouteVisuals();
+            const startLatLng = [truck.lat, truck.lng];
+            const endLatLng = [dest.lat, dest.lng];
+
+            currentRouteLine = L.polyline([startLatLng, endLatLng], {
+                color: '#0056b3', weight: 4, dashArray: '10, 8', opacity: 0.85
+            }).addTo(map);
+
+            currentDestMarker = L.marker(endLatLng, { icon: destIcon })
+                .addTo(map)
+                .bindPopup(`<b>Destination:</b><br>${dest.name}`);
+
+            const distKm = haversineKm(truck.lat, truck.lng, dest.lat, dest.lng).toFixed(2);
+            pendingRoute = { truck, dest, distKm };
+
+            document.getElementById('routeConfirmText').innerHTML =
+                `You are about to assign a new route to truck <b>${truck.plate}</b> heading to <b>${dest.name}</b>. Please confirm before dispatching.`;
+            document.getElementById('routeDistanceInfo').innerText =
+                `Estimated straight-line distance: ${distKm} km (actual road distance may differ).`;
+            document.getElementById('routeConfirmPopup').style.display = 'block';
+
+            map.fitBounds(L.latLngBounds([startLatLng, endLatLng]), { padding: [60, 60] });
+        }
+
+        function confirmRoute() {
+            document.getElementById('routeConfirmPopup').style.display = 'none';
+            if (!pendingRoute || !currentRouteLine) return;
+
+            currentRouteLine.setStyle({ color: '#28a745', dashArray: null, weight: 5 });
+            appendChat(`✅ Route to ${pendingRoute.dest.name} confirmed (${pendingRoute.distKm} km). Vehicle dispatched.`, 'bot');
+            pendingRoute = null;
+        }
+
+        function cancelRoute() {
+            document.getElementById('routeConfirmPopup').style.display = 'none';
+            clearRouteVisuals();
+            appendChat("❌ Route cancelled.", 'bot');
+            pendingRoute = null;
+        }
+
+        function clearRouteVisuals() {
+            if (currentRouteLine) { map.removeLayer(currentRouteLine); currentRouteLine = null; }
+            if (currentDestMarker) { map.removeLayer(currentDestMarker); currentDestMarker = null; }
         }
 
         loadTruckData();

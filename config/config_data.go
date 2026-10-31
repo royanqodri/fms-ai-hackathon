@@ -22,6 +22,7 @@ type Config struct {
 	Facebook        FacebookConfig
 	Apple           AppleConfig
 	Meta            MetaConfig
+	TelegramToken   string
 }
 
 type ServiceConfig struct {
