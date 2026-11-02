@@ -69,7 +69,7 @@ func (controller *ChatControllerImpl) Chat(ctx *gin.Context) {
 			if lastPlateNumber != "" {
 				plateNumber = lastPlateNumber
 			} else {
-				util.WriteResponse(ctx, util.JSON, http.StatusBadRequest, []any{}, []any{}, "Please specify a truck plate number (e.g., 'N 5678 AB') to generate a chart.", 0, 0)
+				util.WriteResponse(ctx, util.JSON, http.StatusBadRequest, []any{}, []any{}, "Please specify a truck plate number (e.g., 'N XXXX RB') to generate a chart.", 0, 0)
 				return
 			}
 		} else {
@@ -138,7 +138,7 @@ func (controller *ChatControllerImpl) Chat(ctx *gin.Context) {
 }
 
 func (controller *ChatControllerImpl) TelegramWebhook(ctx *gin.Context) {
-	log.Println("🔔 Menerima pesan dari Telegram...")
+	log.Println("🔔 Received message from Telegram...")
 
 	var update struct {
 		Message struct {
@@ -158,7 +158,7 @@ func (controller *ChatControllerImpl) TelegramWebhook(ctx *gin.Context) {
 	mutex.Lock()
 	if processedMessages[fmt.Sprintf("%d", update.Message.MessageID)] {
 		mutex.Unlock()
-		log.Println("⚠️ Pesan duplikat terdeteksi, diabaikan.")
+		log.Println("⚠️ Duplicate message detected, ignoring.")
 		ctx.JSON(http.StatusOK, gin.H{"status": "ignored"})
 		return
 	}
@@ -175,15 +175,15 @@ _Powered by Meta AI_
 Hello! I am your intelligent Fleet Management Assistant. I can help you monitor your trucks, analyze health metrics, and generate visual reports in real-time.
 
 *Here is what I can do:*
-1. 🩺 *Check Truck Health* — Ask about a specific truck's condition (e.g., "Check truck N 5678 AB").
+1. 🩺 *Check Truck Health* — Ask about a specific truck's condition (e.g., "Check truck N XXXX RB").
 2. 📊 *Generate Health Charts* — Visualize telemetry data (Temp, Fuel, Oil, RPM) using QuickChart.
 3. 🎨 *Generate AI Illustrations* — Create futuristic dashboard designs via Meta Muse Image.
 4. 🗺️ *Navigate to Nearest SPBU* — Get directions to the closest gas station if a truck is overheating.
 
 *Try these commands:*
-- "Generate a chart for truck N 5678 AB"
-- "Create an illustration for truck N 5678 AB using Muse AI"
-- "Where is the nearest gas station for truck N 5678 AB?"
+- "Generate a chart for truck N XXXX RB"
+- "Create an illustration for truck N XXXX RB using Muse AI"
+- "Where is the nearest gas station for truck N XXXX RB?"
 
 How can I assist you today? 👇`
 
@@ -198,7 +198,7 @@ How can I assist you today? 👇`
 			if lastPlateNumber != "" {
 				plateNumber = lastPlateNumber
 			} else {
-				util.SendTelegramMessage(chatID, "Please specify a truck plate number (e.g., 'N 5678 AB') to generate a chart.")
+				util.SendTelegramMessage(chatID, "Please specify a truck plate number (e.g., 'N XXXX RB') to generate a chart.")
 				ctx.JSON(http.StatusOK, gin.H{"status": "ok"})
 				return
 			}
