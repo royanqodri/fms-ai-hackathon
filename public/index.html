@@ -9,7 +9,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
     <style>
-        /* Set base font size */
+
         html {
             font-size: 16px; 
         }
@@ -38,7 +38,6 @@
         .info-item b { color: #555; display: block; font-size: 0.7rem; margin-bottom: 2px; }
         .info-item span { font-weight: bold; font-size: 0.9rem; }
 
-        /* === PANEL CHATBOT AI === */
         .ai-widget {
             position: absolute; 
             bottom: 20px; 
@@ -56,13 +55,13 @@
             overflow: hidden;
             transition: all 0.3s ease;
             
-            /* FITUR RESIZE */
+ 
             resize: both;
             overflow: auto;
         }
         .ai-widget.active { display: flex; }
         
-        /* === STATE MINIMIZED (MENEMPEL DI KIRI BAWAH) === */
+
         .ai-widget.minimized {
             width: 200px !important;
             height: auto !important;
@@ -203,7 +202,6 @@
             "b540e8dd-2a1e-4a7e-8e02-371742cc9818": { plate: "N 1234 XY", cargo: "TIMBER" }
         };
 
-        // KOORDINAT SPBU (From Google Maps)
         const SPBU_COORDS = {
             "SPBU Labruk": { lat: -8.1394, lng: 113.2086 },
             "SPBU Tempeh": { lat: -8.180560, lng: 113.181637 },
@@ -422,7 +420,7 @@
             clearRouteVisuals();
             const startLatLng = [truck.lat, truck.lng];
             
-            // Koreksi koordinat destinasi berdasarkan kamus
+
             let finalDest = { ...dest };
             for (const [name, coords] of Object.entries(SPBU_COORDS)) {
                 if (dest.name.includes(name)) {
@@ -459,16 +457,15 @@
                 }).addTo(map);
             }
 
-            // 2. Marker tujuan
             currentDestMarker = L.marker(endLatLng, { icon: destIcon })
                 .addTo(map)
                 .bindPopup(`<b>Destination:</b><br>${finalDest.name}`);
 
-            // 3. Hitung jarak
+  
             const distKm = haversineKm(truck.lat, truck.lng, finalDest.lat, finalDest.lng).toFixed(2);
             pendingRoute = { truck, dest: finalDest, distKm };
 
-            // 4. Popup Konfirmasi
+            //Popup Konfirmasi
             document.getElementById('routeConfirmText').innerHTML =
                 `You are about to assign a new route to truck <b>${truck.plate}</b> heading to <b>${finalDest.name}</b>. Please confirm before dispatching.`;
             document.getElementById('routeDistanceInfo').innerText =
