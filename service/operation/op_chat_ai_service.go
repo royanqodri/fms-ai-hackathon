@@ -46,13 +46,14 @@ func (service *ChatServiceImpl) AskAI(ctx *gin.Context, telegramId string, userP
 		"recent_fleet_alerts":  recentAlerts,
 	})
 
+	// list koordinate real fuel in lumajang base
 	spbuList := `
-	1. SPBU Lumajang Kota: Lat -8.133, Lng 113.223
-	2. SPBU Candipuro: Lat -8.190, Lng 113.075
-	3. SPBU Senduro: Lat -8.100, Lng 113.050
-	4. SPBU Pasirian: Lat -8.200, Lng 113.100
-	5. SPBU Tempeh: Lat -8.180, Lng 113.150
-	6. SPBU Kunir: Lat -8.220, Lng 113.180
+	No | Kode SPBU | Nama & Lokasi | Latitude | Longitude | Jalur
+	1  | 54.673.01 | SPBU Pasirian, Jl. Raya Pasirian - Lumajang | -8.2214 | 113.1200 | MAIN_ROAD
+	2  | 54.673.02 | SPBU Sukodono, Jl. Gatot Subroto No.3, Karangsari | -8.1125 | 113.2294 | MAIN_ROAD
+    3  | 54.673.13 | SPBU Labruk, Jl. Slamet Wardoyo 103, Ds. Labruk Lor | -8.1394 | 113.2086 | MAIN_ROAD
+	4  | 53.673.17 | SPBU Condro Pasirian, Jl. Nasional III, Kel. Condro | -8.2050 | 113.1450 | MAIN_ROAD
+	5  | 54.673.07 | SPBU Tempeh, Jl. Raya Tempeh KM 8 | -8.180560 | 113.181637 | MAIN_ROAD
 	`
 
 	systemPrompt := fmt.Sprintf(`
@@ -62,19 +63,20 @@ func (service *ChatServiceImpl) AskAI(ctx *gin.Context, telegramId string, userP
 		CONTEXT DATA (Truck & Alerts):
 		%s
 		
-		LIST OF GAS STATIONS (SPBU) IN LUMAJANG:
+		LIST OF GAS STATIONS (SPBU) IN LUMAJANG (ONLY MAIN ROAD / JALUR MERAH):
 		%s
 		
 		INSTRUCTIONS:
 		1. If the user asks about a specific truck, use the "requested_truck_data" if available.
 		2. If the "requested_truck_data" is null or empty, politely inform the user that the specific truck data is not found in the database.
-		3. If the user asks for directions to the nearest gas station (SPBU), calculate which SPBU from the list is closest to the truck's current Latitude and Longitude, and provide the name and directions.
-		4. If the user asks about general fleet issues, refer to "recent_fleet_alerts".
-		5. Do not hallucinate or invent data. If the information is not in the context, state that you don't know.
-		6. Keep your answer brief and actionable.
+		3. If the user asks for directions to the nearest gas station (SPBU), you MUST ONLY choose from the list provided above (which are all on the main road). Calculate the nearest one based on the truck's Latitude and Longitude. Provide the SPBU code, name, and direction.
+		4. Do NOT recommend any SPBU outside of this list (to avoid routes that go off the main road).
+		5. If the user asks about general fleet issues, refer to "recent_fleet_alerts".
+		6. Do not hallucinate or invent data. If the information is not in the context, state that you don't know.
+		7. Keep your answer brief and actionable.
+		8. Respond in the same language the user is using.
 	`, string(contextData), spbuList)
 
-	// Call AI
 	aiResponse, err := util.AskMetaAI(systemPrompt, userPrompt)
 	if err != nil {
 		return "", err

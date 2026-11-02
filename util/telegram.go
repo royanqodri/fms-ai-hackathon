@@ -37,21 +37,21 @@ func SendTelegramMessage(chatID string, message string) error {
 	}
 	jsonPayload, _ := json.Marshal(payload)
 
-	log.Println("📤 Mengirim pesan ke Telegram untuk chatID:", chatID)
+	log.Println("📤 Sending message to Telegram for chatID:", chatID)
 
 	resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonPayload))
 	if err != nil {
-		log.Println("❌ Gagal HTTP POST ke Telegram:", err)
+		log.Println("❌ Failed to POST message to Telegram:", err)
 		return err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		log.Println("❌ Gagal kirim Telegram, status:", resp.StatusCode)
+		log.Println("❌ Failed to send Telegram message, status:", resp.StatusCode)
 		return fmt.Errorf("failed to send telegram message, status: %d", resp.StatusCode)
 	}
 
-	log.Println("✅ Pesan berhasil dikirim ke Telegram!")
+	log.Println("✅ Message successfully sent to Telegram!")
 	return nil
 }
 
@@ -101,12 +101,12 @@ func SendTelegramPhoto(chatID string, imageData []byte, caption string) error {
 	}
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 
-	log.Println("📤 Mengunggah foto ke Telegram untuk chatID:", chatID)
+	log.Println("📤 Uploading photo to Telegram for chatID:", chatID)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Println("❌ Gagal HTTP POST foto ke Telegram:", err)
+		log.Println("❌ Failed to POST photo to Telegram:", err)
 		return err
 	}
 	defer resp.Body.Close()
@@ -114,11 +114,11 @@ func SendTelegramPhoto(chatID string, imageData []byte, caption string) error {
 	respBody, _ := io.ReadAll(resp.Body)
 
 	if resp.StatusCode != http.StatusOK {
-		log.Printf("❌ Gagal kirim foto Telegram, status: %d, body: %s\n", resp.StatusCode, string(respBody))
+		log.Printf("❌ Failed to send photo to Telegram, status: %d, body: %s\n", resp.StatusCode, string(respBody))
 		return fmt.Errorf("failed to send photo, status: %d", resp.StatusCode)
 	}
 
-	log.Println("✅ Foto berhasil dikirim ke Telegram!")
+	log.Println("✅ Photo successfully sent to Telegram!")
 	return nil
 }
 

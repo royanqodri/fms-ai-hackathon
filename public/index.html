@@ -9,6 +9,11 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
     <style>
+
+        html {
+            font-size: 16px; 
+        }
+
         body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         #map { height: 100vh; width: 100%; }
         
@@ -17,72 +22,96 @@
             padding: 15px; border-radius: 8px; z-index: 1000;
             box-shadow: 0 4px 15px rgba(0,0,0,0.2); max-width: 300px;
         }
-        .info-panel h3 { margin: 0 0 5px 0; font-size: 18px; color: #333; }
-        .info-panel p { margin: 0; font-size: 13px; color: #666; }
+        .info-panel h3 { margin: 0 0 5px 0; font-size: 1.2rem; color: #333; }
+        .info-panel p { margin: 0; font-size: 0.9rem; color: #666; }
         
         .popup-content { width: 260px; }
-        .popup-content h4 { margin: 0 0 10px 0; color: #0056b3; font-size: 16px; border-bottom: 2px solid #eee; padding-bottom: 5px; }
+        .popup-content h4 { margin: 0 0 10px 0; color: #0056b3; font-size: 1rem; border-bottom: 2px solid #eee; padding-bottom: 5px; }
         
         .truck-info-grid { 
             display: grid; grid-template-columns: 1fr 1fr; gap: 8px; 
-            font-size: 12px; color: #333; margin-bottom: 5px; 
+            font-size: 0.8rem; color: #333; margin-bottom: 5px; 
         }
         .info-item {
             background: #f8f9fa; padding: 6px; border-radius: 4px; border-left: 3px solid #0056b3;
         }
-        .info-item b { color: #555; display: block; font-size: 11px; margin-bottom: 2px; }
-        .info-item span { font-weight: bold; font-size: 13px; }
+        .info-item b { color: #555; display: block; font-size: 0.7rem; margin-bottom: 2px; }
+        .info-item span { font-weight: bold; font-size: 0.9rem; }
 
-        /* === WIDGET AI BOT === */
         .ai-widget {
-            position: absolute; bottom: 20px; left: 20px;
-            width: 340px; background: white; border-radius: 12px;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.3); z-index: 1000;
-            display: none; /* SEMBUNYI SAAT AWAL */
-            flex-direction: column; overflow: hidden;
+            position: absolute; 
+            bottom: 20px; 
+            left: 20px;
+            width: 600px; 
+            height: 600px; 
+            max-width: 95vw;
+            max-height: 90vh;
+            background: white; 
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.4); 
+            z-index: 1000;
+            display: none;
+            flex-direction: column; 
+            overflow: hidden;
             transition: all 0.3s ease;
+            
+ 
+            resize: both;
+            overflow: auto;
         }
         .ai-widget.active { display: flex; }
+        
+
+        .ai-widget.minimized {
+            width: 200px !important;
+            height: auto !important;
+            bottom: 20px !important;
+            top: auto !important;
+            left: 20px !important;
+            resize: none;
+        }
+
+        .ai-widget.minimized .ai-widget-body,
+        .ai-widget.minimized .ai-widget-input {
+            display: none;
+        }
         
         .ai-widget-header {
             background: linear-gradient(135deg, #0056b3, #003d82); 
             color: white; padding: 12px 15px;
             display: flex; justify-content: space-between; align-items: center;
             cursor: pointer;
+            flex-shrink: 0; 
         }
         .ai-bot-profile { display: flex; align-items: center; gap: 10px; }
-        .ai-bot-avatar { font-size: 24px; background: white; border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; }
-        .ai-bot-name { font-weight: bold; font-size: 14px; }
-        .ai-bot-status { font-size: 11px; opacity: 0.8; }
+        .ai-bot-avatar { font-size: 1.8rem; background: white; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
+        .ai-bot-name { font-weight: bold; font-size: 1rem; }
+        .ai-bot-status { font-size: 0.8rem; opacity: 0.8; }
         
         .ai-widget-body {
             padding: 15px; display: flex; flex-direction: column; gap: 10px;
-            max-height: 350px; overflow-y: auto; background: #f4f7f6;
+            flex: 1; 
+            overflow-y: auto; background: #f4f7f6;
         }
         
-        .chat-bubble { max-width: 85%; padding: 10px 12px; border-radius: 8px; font-size: 12.5px; line-height: 1.5; white-space: pre-wrap; }
+        .chat-bubble { max-width: 85%; padding: 12px 15px; border-radius: 8px; font-size: 1.1rem; line-height: 1.5; white-space: pre-wrap; }
         .chat-bubble.bot { background: white; color: #333; border: 1px solid #ddd; align-self: flex-start; border-bottom-left-radius: 2px; }
         .chat-bubble.user { background: #0056b3; color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
 
         .ai-widget-input {
             display: flex; gap: 5px; padding: 10px; background: white; border-top: 1px solid #eee;
+            flex-shrink: 0;
         }
         .ai-widget-input input {
-            flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 20px; font-size: 13px; outline: none;
+            flex: 1; padding: 12px; border: 1px solid #ccc; border-radius: 20px; font-size: 1rem; outline: none;
         }
         .ai-widget-input input:focus { border-color: #0056b3; }
         .ai-widget-input button {
-            padding: 10px 15px; background: #0056b3; color: white;
-            border: none; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 13px;
+            padding: 10px 20px; background: #0056b3; color: white;
+            border: none; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 1rem;
         }
         .ai-widget-input button:hover { background: #004494; }
 
-        .ai-widget.minimized .ai-widget-body,
-        .ai-widget.minimized .ai-widget-input {
-            display: none;
-        }
-
-        /* Popup confirm Rute */
         .route-confirm-popup {
             position: absolute; top: 50%; left: 50%;
             transform: translate(-50%, -50%);
@@ -91,11 +120,11 @@
             z-index: 2000; width: 380px; overflow: hidden;
             display: none;
         }
-        .route-confirm-header { background: #ff9800; color: white; padding: 12px 15px; font-weight: bold; font-size: 14px; }
-        .route-confirm-body { padding: 15px; font-size: 13px; color: #333; }
+        .route-confirm-header { background: #ff9800; color: white; padding: 12px 15px; font-weight: bold; font-size: 1rem; }
+        .route-confirm-body { padding: 15px; font-size: 0.9rem; color: #333; }
         .route-confirm-body p { margin: 0 0 10px 0; line-height: 1.5; }
         .route-confirm-actions { display: flex; gap: 10px; padding: 0 15px 15px 15px; }
-        .route-confirm-actions button { flex: 1; padding: 10px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 13px; transition: 0.2s; }
+        .route-confirm-actions button { flex: 1; padding: 10px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 0.9rem; transition: 0.2s; }
         .btn-confirm-route { background: #28a745; color: white; }
         .btn-confirm-route:hover { background: #218838; }
         .btn-cancel-route { background: #dc3545; color: white; }
@@ -111,7 +140,6 @@
 
     <div id="map"></div>
 
-    <!-- WIDGET AI BOT -->
     <div class="ai-widget" id="aiWidget">
         <div class="ai-widget-header">
             <div class="ai-bot-profile">
@@ -134,7 +162,6 @@
         </div>
     </div>
 
-    <!-- Popup Konfirm Rute -->
     <div id="routeConfirmPopup" class="route-confirm-popup">
         <div class="route-confirm-header">⚠️ Route Assignment Confirmation</div>
         <div class="route-confirm-body">
@@ -173,6 +200,14 @@
             "be25a416-f538-4068-9c99-2f548ef0a97e": { plate: "N 5678 AB", cargo: "SAND" },
             "dd254e1b-e068-4dd5-939b-b6fc0b142e9a": { plate: "N 9999 CD", cargo: "SUGARCANE" },
             "b540e8dd-2a1e-4a7e-8e02-371742cc9818": { plate: "N 1234 XY", cargo: "TIMBER" }
+        };
+
+        const SPBU_COORDS = {
+            "SPBU Labruk": { lat: -8.1394, lng: 113.2086 },
+            "SPBU Tempeh": { lat: -8.180560, lng: 113.181637 },
+            "SPBU Pasirian": { lat: -8.2214, lng: 113.1200 },
+            "SPBU Condro": { lat: -8.2050, lng: 113.1450 },
+            "SPBU Sukodono": { lat: -8.1125, lng: 113.2294 }
         };
 
         function haversineKm(lat1, lon1, lat2, lon2) {
@@ -298,7 +333,6 @@
             
             const widget = document.getElementById('aiWidget');
             
-
             if (!widget.classList.contains('active')) {
                 widget.classList.add('active');
             }
@@ -344,7 +378,6 @@
             const fullMessage = `Regarding truck ${activeTruck.plate} (ID: ${activeTruck.id}). Current location is Latitude: ${activeTruck.lat}, Longitude: ${activeTruck.lng}. User asks: ${question}. Please provide actionable advice. ${routeInstruction} ${languageInstruction}`;
 
             try {
-         
                 const res = await fetch('http://localhost:9005/api/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -383,24 +416,58 @@
             }
         }
 
-        function prepareRoute(truck, dest) {
+        async function prepareRoute(truck, dest) {
             clearRouteVisuals();
             const startLatLng = [truck.lat, truck.lng];
-            const endLatLng = [dest.lat, dest.lng];
+            
 
-            currentRouteLine = L.polyline([startLatLng, endLatLng], {
-                color: '#0056b3', weight: 4, dashArray: '10, 8', opacity: 0.85
-            }).addTo(map);
+            let finalDest = { ...dest };
+            for (const [name, coords] of Object.entries(SPBU_COORDS)) {
+                if (dest.name.includes(name)) {
+                    finalDest.lat = coords.lat;
+                    finalDest.lng = coords.lng;
+                    break;
+                }
+            }
+
+            const endLatLng = [finalDest.lat, finalDest.lng];
+
+            const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${truck.lng},${truck.lat};${finalDest.lng},${finalDest.lat}?overview=full&geometries=geojson`;
+            
+            try {
+                const response = await fetch(osrmUrl);
+                const data = await response.json();
+                
+                if (data.routes && data.routes.length > 0) {
+                    const coordinates = data.routes[0].geometry.coordinates;
+                    const routeLatLngs = coordinates.map(coord => [coord[1], coord[0]]);
+                    
+                    currentRouteLine = L.polyline(routeLatLngs, {
+                        color: '#0056b3', weight: 5, opacity: 0.8
+                    }).addTo(map);
+                } else {
+                    currentRouteLine = L.polyline([startLatLng, endLatLng], {
+                        color: '#0056b3', weight: 4, dashArray: '10, 8', opacity: 0.85
+                    }).addTo(map);
+                }
+            } catch (error) {
+                console.error("OSRM Error:", error);
+                currentRouteLine = L.polyline([startLatLng, endLatLng], {
+                    color: '#0056b3', weight: 4, dashArray: '10, 8', opacity: 0.85
+                }).addTo(map);
+            }
 
             currentDestMarker = L.marker(endLatLng, { icon: destIcon })
                 .addTo(map)
-                .bindPopup(`<b>Destination:</b><br>${dest.name}`);
+                .bindPopup(`<b>Destination:</b><br>${finalDest.name}`);
 
-            const distKm = haversineKm(truck.lat, truck.lng, dest.lat, dest.lng).toFixed(2);
-            pendingRoute = { truck, dest, distKm };
+  
+            const distKm = haversineKm(truck.lat, truck.lng, finalDest.lat, finalDest.lng).toFixed(2);
+            pendingRoute = { truck, dest: finalDest, distKm };
 
+            //Popup Konfirmasi
             document.getElementById('routeConfirmText').innerHTML =
-                `You are about to assign a new route to truck <b>${truck.plate}</b> heading to <b>${dest.name}</b>. Please confirm before dispatching.`;
+                `You are about to assign a new route to truck <b>${truck.plate}</b> heading to <b>${finalDest.name}</b>. Please confirm before dispatching.`;
             document.getElementById('routeDistanceInfo').innerText =
                 `Estimated straight-line distance: ${distKm} km (actual road distance may differ).`;
             document.getElementById('routeConfirmPopup').style.display = 'block';
