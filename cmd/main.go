@@ -128,6 +128,7 @@ func initRouter() {
 	router.Use(gin.Recovery(), util.CORSMiddleware())
 
 	router.Static("/public", "./public")
+	router.StaticFile("/", "./public/index.html")
 
 	//ENDPOINT
 	api := router.Group("/api")
@@ -150,6 +151,7 @@ func initRouter() {
 		api.POST("/alerts", logAlertController.Post)
 
 		api.POST("/chat", chatController.Chat)
+		api.POST("/voice-chat", chatController.VoiceChat)
 		api.POST("/telegram/webhook", chatController.TelegramWebhook)
 
 	}
@@ -169,9 +171,9 @@ func initRouter() {
 	}()
 
 	// init timeout
-	readTimeout := time.Duration(config.Get().Service.ReadTimeout) * time.Second
-	writeTimeout := time.Duration(config.Get().Service.WriteTimeout) * time.Second
-	idleTimeout := time.Duration(config.Get().Service.IdleTimeout) * time.Second
+	readTimeout := 60 * time.Second
+	writeTimeout := 60 * time.Second
+	idleTimeout := 60 * time.Second
 
 	// init server
 	server := &http.Server{

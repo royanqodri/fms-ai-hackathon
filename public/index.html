@@ -9,11 +9,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
     <style>
-
-        html {
-            font-size: 16px; 
-        }
-
+        html { font-size: 16px; }
         body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         #map { height: 100vh; width: 100%; }
         
@@ -39,49 +35,24 @@
         .info-item span { font-weight: bold; font-size: 0.9rem; }
 
         .ai-widget {
-            position: absolute; 
-            bottom: 20px; 
-            left: 20px;
-            width: 600px; 
-            height: 600px; 
-            max-width: 95vw;
-            max-height: 90vh;
-            background: white; 
-            border-radius: 12px;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.4); 
-            z-index: 1000;
-            display: none;
-            flex-direction: column; 
-            overflow: hidden;
-            transition: all 0.3s ease;
-            
- 
-            resize: both;
-            overflow: auto;
+            position: absolute; bottom: 20px; left: 20px; width: 600px; height: 600px; 
+            max-width: 95vw; max-height: 90vh; background: white; border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.4); z-index: 1000; display: none;
+            flex-direction: column; overflow: hidden; transition: all 0.3s ease;
+            resize: both; overflow: auto;
         }
         .ai-widget.active { display: flex; }
-        
-
         .ai-widget.minimized {
-            width: 200px !important;
-            height: auto !important;
-            bottom: 20px !important;
-            top: auto !important;
-            left: 20px !important;
-            resize: none;
+            width: 200px !important; height: auto !important; bottom: 20px !important;
+            top: auto !important; left: 20px !important; resize: none;
         }
-
         .ai-widget.minimized .ai-widget-body,
-        .ai-widget.minimized .ai-widget-input {
-            display: none;
-        }
+        .ai-widget.minimized .ai-widget-input { display: none; }
         
         .ai-widget-header {
             background: linear-gradient(135deg, #0056b3, #003d82); 
-            color: white; padding: 12px 15px;
-            display: flex; justify-content: space-between; align-items: center;
-            cursor: pointer;
-            flex-shrink: 0; 
+            color: white; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center;
+            cursor: pointer; flex-shrink: 0; 
         }
         .ai-bot-profile { display: flex; align-items: center; gap: 10px; }
         .ai-bot-avatar { font-size: 1.8rem; background: white; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
@@ -90,8 +61,7 @@
         
         .ai-widget-body {
             padding: 15px; display: flex; flex-direction: column; gap: 10px;
-            flex: 1; 
-            overflow-y: auto; background: #f4f7f6;
+            flex: 1; overflow-y: auto; background: #f4f7f6;
         }
         
         .chat-bubble { max-width: 85%; padding: 12px 15px; border-radius: 8px; font-size: 1.1rem; line-height: 1.5; white-space: pre-wrap; }
@@ -100,25 +70,42 @@
 
         .ai-widget-input {
             display: flex; gap: 5px; padding: 10px; background: white; border-top: 1px solid #eee;
-            flex-shrink: 0;
+            flex-shrink: 0; align-items: center;
         }
         .ai-widget-input input {
             flex: 1; padding: 12px; border: 1px solid #ccc; border-radius: 20px; font-size: 1rem; outline: none;
         }
         .ai-widget-input input:focus { border-color: #0056b3; }
+        
         .ai-widget-input button {
             padding: 10px 20px; background: #0056b3; color: white;
             border: none; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 1rem;
+            transition: 0.2s;
         }
         .ai-widget-input button:hover { background: #004494; }
 
+        /* Gaya untuk Tombol Mikrofon */
+        .btn-mic {
+            background: #e0e0e0 !important; color: #333 !important; 
+            border-radius: 50% !important; width: 45px; height: 45px; padding: 0 !important;
+            display: flex; justify-content: center; align-items: center; font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+        .btn-mic:hover { background: #d0d0d0 !important; }
+        .btn-mic.recording {
+            background: #dc3545 !important; color: white !important;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(220, 53, 69, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+        }
+
         .route-confirm-popup {
-            position: absolute; top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            background: white; border-radius: 10px;
-            box-shadow: 0 6px 30px rgba(0,0,0,0.4);
-            z-index: 2000; width: 380px; overflow: hidden;
-            display: none;
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: white; border-radius: 10px; box-shadow: 0 6px 30px rgba(0,0,0,0.4);
+            z-index: 2000; width: 380px; overflow: hidden; display: none;
         }
         .route-confirm-header { background: #ff9800; color: white; padding: 12px 15px; font-weight: bold; font-size: 1rem; }
         .route-confirm-body { padding: 15px; font-size: 0.9rem; color: #333; }
@@ -158,6 +145,8 @@
 
         <div class="ai-widget-input">
             <input type="text" id="ai-input-main" placeholder="Select a truck first..." disabled onkeypress="handleKeyPress(event)">
+            <!-- TOMBOL MIKROFON -->
+            <button class="btn-mic" id="micBtn" onclick="toggleVoiceInput()" title="Speak via Microphone">🎤</button>
             <button onclick="askAIGlobal()">Send</button>
         </div>
     </div>
@@ -175,6 +164,70 @@
     </div>
 
     <script>
+        // --- LOGIKA WEB SPEECH API (VOICE RECOGNITION) ---
+        let recognition = null;
+        let isRecording = false;
+
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'id-ID'; // Bahasa Indonesia
+
+            recognition.onstart = function() {
+                isRecording = true;
+                document.getElementById('micBtn').classList.add('recording');
+                document.getElementById('ai-input-main').placeholder = "Listening... (Bicara sekarang)";
+            };
+
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript;
+                document.getElementById('ai-input-main').value = transcript;
+                setTimeout(() => { askAIGlobal(); }, 500);
+            };
+
+            recognition.onerror = function(event) {
+                console.error("Speech recognition error:", event.error);
+                if(event.error === 'not-allowed') {
+                    alert("Akses mikrofon ditolak. Pastikan browser diizinkan menggunakan mikrofon.");
+                }
+                resetMicState();
+            };
+
+            recognition.onend = function() {
+                resetMicState();
+            };
+        }
+
+        function resetMicState() {
+            isRecording = false;
+            document.getElementById('micBtn').classList.remove('recording');
+            if(activeTruck) {
+                document.getElementById('ai-input-main').placeholder = `Ask about ${activeTruck.plate}...`;
+            } else {
+                document.getElementById('ai-input-main').placeholder = "Select a truck first...";
+            }
+        }
+
+        function toggleVoiceInput() {
+            if (!activeTruck) {
+                alert("Pilih truk di peta terlebih dahulu sebelum menggunakan perintah suara!");
+                return;
+            }
+            if (!recognition) {
+                alert("Browser kamu tidak mendukung fitur pengenalan suara. Gunakan Google Chrome atau Microsoft Edge.");
+                return;
+            }
+
+            if (isRecording) {
+                recognition.stop();
+            } else {
+                recognition.start();
+            }
+        }
+        // --------------------------------------------------
+
         const map = L.map('map').setView([-8.133, 113.223], 11);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
@@ -260,7 +313,7 @@
 
         async function loadTruckData() {
             try {
-                const response = await fetch('http://localhost:9005/api/telemetries?source=WEB');
+                const response = await fetch('/api/telemetries?source=WEB');
                 const result = await response.json();
 
                 let trucks = [];
@@ -284,7 +337,7 @@
                     
                     map.eachLayer((layer) => {
                         if (layer instanceof L.Marker && layer !== currentDestMarker) {
-                            map.removeLayer(layer);
+                            map.removeLayer(layer); 
                         }
                     });
 
@@ -377,17 +430,27 @@
 
             const fullMessage = `Regarding truck ${activeTruck.plate} (ID: ${activeTruck.id}). Current location is Latitude: ${activeTruck.lat}, Longitude: ${activeTruck.lng}. User asks: ${question}. Please provide actionable advice. ${routeInstruction} ${languageInstruction}`;
 
+            // AbortController untuk batas waktu (Timeout) 60 detik
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 60000);
+
             try {
-                const res = await fetch('http://localhost:9005/api/chat', {
+                const res = await fetch('/api/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         telegram_id: "1689561756", 
                         message: fullMessage
-                    })
+                    }),
+                    signal: controller.signal
                 });
                 
-                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                clearTimeout(timeoutId);
+
+                if (!res.ok) {
+                    const errorText = await res.text(); 
+                    throw new Error(`Server Error (${res.status}): ${errorText}`);
+                }
                 
                 const data = await res.json();
                 
@@ -409,7 +472,12 @@
                 }
             } catch (error) {
                 loadingBubble.remove();
-                appendChat(`Failed to connect to AI server.\nMake sure the backend is running.\nDetail: ${error.message}`, 'bot');
+                
+                if (error.name === 'AbortError') {
+                    appendChat("⚠️ AI membutuhkan waktu terlalu lama (lebih dari 60 detik). Silakan coba lagi.", 'bot');
+                } else {
+                    appendChat(`⚠️ Gagal: ${error.message}\nPastikan server Go menyala dan cek terminal untuk error.`, 'bot');
+                }
                 console.error("Fetch error:", error);
             } finally {
                 isBotTyping = false;
@@ -419,7 +487,6 @@
         async function prepareRoute(truck, dest) {
             clearRouteVisuals();
             const startLatLng = [truck.lat, truck.lng];
-            
 
             let finalDest = { ...dest };
             for (const [name, coords] of Object.entries(SPBU_COORDS)) {
@@ -461,11 +528,9 @@
                 .addTo(map)
                 .bindPopup(`<b>Destination:</b><br>${finalDest.name}`);
 
-  
             const distKm = haversineKm(truck.lat, truck.lng, finalDest.lat, finalDest.lng).toFixed(2);
             pendingRoute = { truck, dest: finalDest, distKm };
 
-            //Popup Konfirmasi
             document.getElementById('routeConfirmText').innerHTML =
                 `You are about to assign a new route to truck <b>${truck.plate}</b> heading to <b>${finalDest.name}</b>. Please confirm before dispatching.`;
             document.getElementById('routeDistanceInfo').innerText =
