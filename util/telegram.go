@@ -135,3 +135,60 @@ func SendChartToTelegram(chatID string, title string, labels []string, tempData,
 
 	return nil
 }
+
+func DownloadTelegramFile(fileID string) (string, error) {
+
+	err := godotenv.Load("config.env")
+	if err != nil {
+		_ = godotenv.Load("./cmd/config.env")
+	}
+
+	botToken := os.Getenv("TELEGRAM_BOT_TOKEN")
+	if botToken == "" {
+		return "", fmt.Errorf("TELEGRAM_BOT_TOKEN not set")
+	}
+
+	resp, err := http.Get(fmt.Sprintf("https://api.telegram.org/bot%s/getFile?file_id=%s", botToken, fileID))
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	var result struct {
+		Ok     bool `json:"ok"`
+		Result struct {
+			FilePath string `json:"file_path"`
+		} `json:"result"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return "", err
+	}
+	if !result.Ok {
+		return "", fmt.Errorf("failed to get file path from Telegram")
+	}
+
+	fileUrl := fmt.Sprintf("https://api.telegram.org/file/bot%s/%s", botToken, result.Result.FilePath)
+	respFile, err := http.Get(fileUrl)
+	if err != nil {
+		return "", err
+	}
+	defer respFile.Body.Close()
+
+	if _, err := os.Stat("./tmp"); os.IsNotExist(err) {
+		_ = os.Mkdir("./tmp", 0755)
+	}
+	localPath := fmt.Sprintf("./tmp/%s.ogg", fileID)
+	out, err := os.Create(localPath)
+	if err != nil {
+		return "", err
+	}
+	defer out.Close()
+
+	_, err = io.Copy(out, respFile.Body)
+	if err != nil {
+		return "", err
+	}
+
+	log.Println("✅ Audio file downloaded from Telegram!")
+	return localPath, nil
+}

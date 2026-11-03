@@ -1,7 +1,11 @@
 package operation
 
 import (
-	"errors"
+	"database/sql"
+	"fmt"
+	"log"
+	"regexp"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	dbConn "github.com/royanqodri/fms-ai-hackathon/database"
@@ -28,7 +32,18 @@ func (repo AiRepositoryImpl) getTx(tx *gorm.DB) *gorm.DB {
 }
 
 func (repo AiRepositoryImpl) GetTruckContext(ctx *gin.Context, tx *gorm.DB, plateNumber string) (map[string]interface{}, error) {
-	var result map[string]interface{}
+
+	upper := strings.ToUpper(plateNumber)
+	re := regexp.MustCompile(`([A-Z]{1,2})[\s\.\-]*([0-9]{1,4})[\s\.\-]*([A-Z]{1,3})`)
+	matches := re.FindStringSubmatch(upper)
+
+	plateWithSpace := plateNumber
+	plateWithoutSpace := plateNumber
+
+	if len(matches) > 0 {
+		plateWithSpace = fmt.Sprintf("%s %s %s", matches[1], matches[2], matches[3])
+		plateWithoutSpace = matches[1] + matches[2] + matches[3]
+	}
 
 	query := `
 		SELECT 
@@ -47,55 +62,54 @@ func (repo AiRepositoryImpl) GetTruckContext(ctx *gin.Context, tx *gorm.DB, plat
 		FROM master.mst_trucks t
 		LEFT JOIN master.mst_customers c ON t.customer_id = c.id
 		LEFT JOIN operations.trx_telemetries tel ON t.id = tel.truck_id
-		WHERE t.plate_number ILIKE ?
+		WHERE t.plate_number ILIKE ? OR t.plate_number ILIKE ?
 		ORDER BY tel.recorded_at DESC
 		LIMIT 1
 	`
 
-	row := repo.getTx(tx).Raw(query, "%"+plateNumber+"%").Row()
-	err := row.Scan(
-		new(string), new(string), new(string), new(string),
-		new(float64), new(float64), new(float64), new(float64),
-		new(float64), new(float64), new(float64), new(string),
-	)
-
 	type TruckContext struct {
-		PlateNumber string  `json:"plate_number"`
-		CargoType   string  `json:"cargo_type"`
-		Status      string  `json:"status"`
-		CompanyName string  `json:"company_name"`
-		Temperature float64 `json:"temperature"`
-		WeightLoad  float64 `json:"weight_load"`
-		Latitude    float64 `json:"latitude"`
-		Longitude   float64 `json:"longitude"`
-		FuelLevel   float64 `json:"fuel_level"`
-		OilPressure float64 `json:"oil_pressure"`
-		EngineRpm   float64 `json:"engine_rpm"`
-		LastUpdate  string  `json:"last_update"`
+		PlateNumber string          `json:"plate_number"`
+		CargoType   string          `json:"cargo_type"`
+		Status      string          `json:"status"`
+		CompanyName string          `json:"company_name"`
+		Temperature sql.NullFloat64 `json:"temperature"`
+		WeightLoad  sql.NullFloat64 `json:"weight_load"`
+		Latitude    sql.NullFloat64 `json:"latitude"`
+		Longitude   sql.NullFloat64 `json:"longitude"`
+		FuelLevel   sql.NullFloat64 `json:"fuel_level"`
+		OilPressure sql.NullFloat64 `json:"oil_pressure"`
+		EngineRpm   sql.NullFloat64 `json:"engine_rpm"`
+		LastUpdate  sql.NullString  `json:"last_update"`
 	}
 
 	var data TruckContext
-	err = repo.getTx(tx).Raw(query, "%"+plateNumber+"%").Scan(&data).Error
+
+	err := repo.getTx(tx).Raw(query, "%"+plateWithSpace+"%", "%"+plateWithoutSpace+"%").Scan(&data).Error
 
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
-		}
+		log.Println("❌ Error GetTruckContext:", err)
 		return nil, err
 	}
 
-	result = map[string]interface{}{
+	if data.PlateNumber == "" {
+		log.Println("⚠️ Truk not found in database for plat:", plateNumber)
+		return nil, nil
+	}
+
+	log.Println("✅ Truk success found in database:", data.PlateNumber)
+
+	result := map[string]interface{}{
 		"plate_number": data.PlateNumber,
 		"cargo_type":   data.CargoType,
 		"status":       data.Status,
 		"company_name": data.CompanyName,
-		"temperature":  data.Temperature,
-		"weight_load":  data.WeightLoad,
-		"location":     map[string]float64{"lat": data.Latitude, "lng": data.Longitude},
-		"fuel_level":   data.FuelLevel,
-		"oil_pressure": data.OilPressure,
-		"engine_rpm":   data.EngineRpm,
-		"last_update":  data.LastUpdate,
+		"temperature":  data.Temperature.Float64,
+		"weight_load":  data.WeightLoad.Float64,
+		"location":     map[string]float64{"lat": data.Latitude.Float64, "lng": data.Longitude.Float64},
+		"fuel_level":   data.FuelLevel.Float64,
+		"oil_pressure": data.OilPressure.Float64,
+		"engine_rpm":   data.EngineRpm.Float64,
+		"last_update":  data.LastUpdate.String,
 	}
 
 	return result, nil

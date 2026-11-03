@@ -7,8 +7,13 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"mime/multipart"
 	"net/http"
+	"net/textproto"
 	"os"
+	"os/exec"
+	"path/filepath"
+	"time"
 
 	"github.com/joho/godotenv"
 )
@@ -154,9 +159,97 @@ func GenerateImageWithMeta(prompt string) ([]byte, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to decode base64 image: %w", err)
 		}
-		log.Println("✅ Ilustrasi AI berhasil dibuat!")
+		log.Println("✅ Ilustration AI success!")
 		return imgData, nil
 	}
 
 	return nil, fmt.Errorf("no image data returned. Raw response: %s", string(body))
+}
+
+func TranscribeAudioWithMeta(audioFilePath string) (string, error) {
+	// Load API Key
+	_ = godotenv.Load("config.env")
+	_ = godotenv.Load("./cmd/config.env")
+
+	apiKey := os.Getenv("META_API_KEY")
+	if apiKey == "" {
+		return "", fmt.Errorf("META_API_KEY is not set")
+	}
+
+	wavPath := filepath.Join(filepath.Dir(audioFilePath), fmt.Sprintf("converted_%d.wav", time.Now().UnixNano()))
+
+	ffmpegPath := "./ffmpeg.exe"
+
+	cmd := exec.Command(ffmpegPath, "-y", "-i", audioFilePath, "-ac", "1", "-ar", "24000", "-c:a", "pcm_s16le", "-map_metadata", "-1", wavPath)
+
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+
+	if err := cmd.Run(); err != nil {
+		return "", fmt.Errorf("failed to convert audio to WAV: %w | stderr: %s", err, stderr.String())
+	}
+	defer os.Remove(wavPath)
+
+	audioFile, err := os.Open(wavPath)
+	if err != nil {
+		return "", fmt.Errorf("failed to open WAV file: %w", err)
+	}
+	defer audioFile.Close()
+
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+
+	h := make(textproto.MIMEHeader)
+	h.Set("Content-Disposition", `form-data; name="request"`)
+	h.Set("Content-Type", "application/json")
+
+	part, err := writer.CreatePart(h)
+	if err != nil {
+		return "", fmt.Errorf("failed to create form part 'request': %w", err)
+	}
+
+	requestJson := map[string]interface{}{
+		"model":         "muse-voice-transcribe-1.0",
+		"audioEncoding": "WAV",
+		"mode":          "PUSH_TO_TALK",
+	}
+	requestBytes, _ := json.Marshal(requestJson)
+	_, _ = part.Write(requestBytes)
+
+	audioPart, err := writer.CreateFormFile("audio", "audio.wav")
+	if err != nil {
+		return "", fmt.Errorf("failed to create form file 'audio': %w", err)
+	}
+	_, _ = io.Copy(audioPart, audioFile)
+	_ = writer.Close()
+
+	url := "https://api.meta.ai/v1/asr/transcribe?sessionId=fms-hackathon-session"
+	req, err := http.NewRequest("POST", url, body)
+	if err != nil {
+		return "", fmt.Errorf("failed to create HTTP request: %w", err)
+	}
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req.Header.Set("Authorization", "Bearer "+apiKey)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("failed to send request to Meta API: %w", err)
+	}
+	defer resp.Body.Close()
+
+	respBody, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("Meta Voice API error (status %d): %s", resp.StatusCode, string(respBody))
+	}
+
+	var result struct {
+		Transcript string `json:"transcript"`
+	}
+	if err := json.Unmarshal(respBody, &result); err != nil {
+		return "", fmt.Errorf("failed to parse response JSON: %w", err)
+	}
+
+	log.Println("✅ Audio transcribed successfully!")
+	return result.Transcript, nil
 }

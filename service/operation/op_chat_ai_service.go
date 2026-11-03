@@ -25,14 +25,7 @@ func NewChatService(aiRepo operation.AiRepository) ChatService {
 
 func (service *ChatServiceImpl) AskAI(ctx *gin.Context, telegramId string, userPrompt string) (string, error) {
 
-	plateNumber := ""
-	words := strings.Fields(userPrompt)
-	for i := 0; i < len(words)-1; i++ {
-		if strings.ToUpper(words[i]) == "N" || strings.ToUpper(words[i]) == "B" || strings.ToUpper(words[i]) == "L" {
-			plateNumber = words[i] + " " + words[i+1]
-			break
-		}
-	}
+	plateNumber := util.ExtractPlateNumber(userPrompt)
 
 	var truckContext map[string]interface{}
 	if plateNumber != "" {
@@ -40,6 +33,20 @@ func (service *ChatServiceImpl) AskAI(ctx *gin.Context, telegramId string, userP
 	}
 
 	recentAlerts, _ := service.aiRepo.GetRecentAlerts(ctx, nil, 5)
+	if truckContext == nil && plateNumber != "" {
+		cleanPlate := strings.ToUpper(strings.ReplaceAll(plateNumber, " ", ""))
+
+		for _, alert := range recentAlerts {
+			alertPlate, ok := alert["plate_number"].(string)
+			if ok {
+				cleanAlertPlate := strings.ToUpper(strings.ReplaceAll(alertPlate, " ", ""))
+				if strings.Contains(cleanAlertPlate, cleanPlate) {
+					truckContext = alert
+					break
+				}
+			}
+		}
+	}
 
 	contextData, _ := json.Marshal(map[string]interface{}{
 		"requested_truck_data": truckContext,
