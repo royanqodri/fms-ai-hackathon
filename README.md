@@ -67,7 +67,7 @@ Existing approaches (manual checks, generic GPS trackers) fall short because the
 
 | Resource | Link |
 |---|---|
-| 🎥 3-minute demo video | [Watch on YouTube](https://youtu.be/XJlv5mvtS9M) |
+| 🎥 3-minute demo video | [Watch on YouTube](https://youtu.be/a-bfpwqC0S8?si=KPd9MFc64I16gYaU) |
 | 🌐 Live dashboard | `http://localhost:9005/public/index.html` |
 | 🤖 Telegram bot | [@fms_meta_bot](https://t.me/fms_meta_bot) |
 
