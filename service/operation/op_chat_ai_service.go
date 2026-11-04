@@ -33,6 +33,7 @@ func (service *ChatServiceImpl) AskAI(ctx *gin.Context, telegramId string, userP
 	}
 
 	recentAlerts, _ := service.aiRepo.GetRecentAlerts(ctx, nil, 5)
+
 	if truckContext == nil && plateNumber != "" {
 		cleanPlate := strings.ToUpper(strings.ReplaceAll(plateNumber, " ", ""))
 
@@ -75,13 +76,15 @@ func (service *ChatServiceImpl) AskAI(ctx *gin.Context, telegramId string, userP
 		
 		INSTRUCTIONS:
 		1. If the user asks about a specific truck, use the "requested_truck_data" if available.
-		2. If the "requested_truck_data" is null or empty, politely inform the user that the specific truck data is not found in the database.
-		3. If the user asks for directions to the nearest gas station (SPBU), you MUST ONLY choose from the list provided above (which are all on the main road). Calculate the nearest one based on the truck's Latitude and Longitude. Provide the SPBU code, name, and direction.
-		4. Do NOT recommend any SPBU outside of this list (to avoid routes that go off the main road).
-		5. If the user asks about general fleet issues, refer to "recent_fleet_alerts".
-		6. Do not hallucinate or invent data. If the information is not in the context, state that you don't know.
-		7. Keep your answer brief and actionable.
-		8. Respond in the same language the user is using.
+		2. CRITICAL: If "requested_truck_data" is not null, answer using its telemetry data (Temp, Fuel, Location, etc). 
+		3. If "requested_truck_data" is null, try to find the truck's data inside "recent_fleet_alerts". Use the alert data to answer.
+		4. ONLY IF the truck is not found in BOTH "requested_truck_data" and "recent_fleet_alerts", then politely inform the user that the specific truck data is completely not found in the database.
+		5. If the user asks for directions to the nearest gas station (SPBU), you MUST ONLY choose from the list provided above. Calculate the nearest one based on the truck's Latitude and Longitude. Provide the SPBU code, name, and direction.
+		6. Do NOT recommend any SPBU outside of this list (to avoid routes that go off the main road).
+		7. If the user asks about general fleet issues, refer to "recent_fleet_alerts".
+		8. Do not hallucinate. All data (Temp, Fuel, Coords) MUST come from the context. Do not invent numbers.
+		9. Keep your answer brief, professional, and actionable.
+		10. Respond in the same language the user is using (Indonesian or English).
 	`, string(contextData), spbuList)
 
 	aiResponse, err := util.AskMetaAI(systemPrompt, userPrompt)
